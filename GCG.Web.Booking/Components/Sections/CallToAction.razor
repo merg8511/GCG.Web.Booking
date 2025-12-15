@@ -1,0 +1,245 @@
+﻿<div class="booking-toggle-tab d-md-none" @onclick="ToggleMobileBar">
+    <MudIcon Icon="@(isMobileVisible ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ExpandLess)" />
+</div>
+
+<div class="booking-bar @(isMobileVisible ? "mobile-visible" : "")">
+    <div class="booking-item">
+        <MudButton OnClick="TogglePickerPopover" StartIcon="@Icons.Material.Filled.DateRange" FullWidth="true" Dense="true">
+            Cuándo
+        </MudButton>
+
+        <MudPopover Open="@isPickerOpen"
+                    AnchorOrigin="Origin.BottomCenter"
+                    TransformOrigin="Origin.TopCenter"
+                    RelativeWidth="DropdownWidth.Adaptive"
+                    Class="booking-calendar-popover">
+            <MudDateRangePicker @ref="_picker"
+                                @bind-DateRange="selectedRange"
+                                MinDate="@DateTime.Today"
+                                MaxDate="@DateTime.Today.AddMonths(6)"
+                                DisplayMonths="1"
+                                IsDateDisabledFunc="IsDisabled"
+                                PickerVariant="PickerVariant.Static"
+                                ShowToolbar="false"
+                                AutoClose="false"
+                                Class="booking-calendar">
+
+                <PickerActions>
+                    <MudButton Class="mr-auto" OnClick="@(() => _picker.ClearAsync())">Clear</MudButton>
+                    <MudButton OnClick="@(() => ClosePicker(false))">Cancel</MudButton>
+                    <MudButton Color="Color.Primary" OnClick="@(() => ClosePicker(true))">Ok</MudButton>
+                </PickerActions>
+            </MudDateRangePicker>
+        </MudPopover>
+
+        @if (selectedRange is not null)
+        {
+            <div class="booking-subtext">
+                <MudText Typo="Typo.caption">
+                    @($"{selectedRange.Start:dd MMM yyyy} – {selectedRange.End:dd MMM yyyy}")
+                </MudText>
+            </div>
+        }
+    </div>
+
+    <div class="booking-item">
+        <MudButton OnClick="ToggleQuantityPopover" FullWidth="true" StartIcon="@Icons.Material.Filled.Group">
+            Quién
+        </MudButton>
+
+        <MudPopover Open="@isQuantityOpen"
+                    AnchorOrigin="Origin.BottomCenter"
+                    TransformOrigin="Origin.TopCenter"
+                    RelativeWidth="DropdownWidth.Adaptive"
+                    Class="booking-calendar-popover">
+            <MudStack Spacing="1">
+                <MudStack Spacing="1" Class="pa-3" Style="width:200px;">
+                    <MudText Typo="Typo.subtitle2">Adultos</MudText>
+                    <MudNumericField @bind-Value="adults" Min="1" Max="10" />
+
+                    <MudText Typo="Typo.subtitle2" Class="mt-2">Niños</MudText>
+                    <MudNumericField @bind-Value="children" Min="0" Max="10" />
+
+                    <MudStack Spacing="3" Row="true" Justify="Justify.SpaceBetween">
+                        <MudButton OnClick="@(() => CloseQuantityPopover(false))">Cancel</MudButton>
+                        <MudButton Color="Color.Primary" OnClick="@(() => CloseQuantityPopover(false))">Ok</MudButton>
+                    </MudStack>
+                </MudStack>
+            </MudStack>
+        </MudPopover>
+
+        @if (adults > 0 || children > 0)
+        {
+            <div class="booking-subtext">
+                <MudText Typo="Typo.caption">
+                    @($"{adults} adulto(s) {(children > 0 ? $"· {children} niño(s)" : "")}")
+                </MudText>
+            </div>
+        }
+    </div>
+
+    <MudTextField @bind-Value="promoCode"
+                  Placeholder="CÓDIGO PROMO"
+                  Variant="Variant.Outlined"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.LocalOffer"
+                  AdornmentColor="Color.Inherit"
+                  Class="promo-input" />
+
+    <MudButton Variant="Variant.Filled"
+               Color="Color.Secondary"
+               Style="color:black !important;"
+               Class="booking-button"
+               StartIcon="@Icons.Material.Filled.CalendarMonth"
+               OnClick="ConfirmBooking">
+        Reservar Ahora
+    </MudButton>
+</div>
+
+<style>
+    .booking-bar {
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60%;
+        max-width: 1100px;
+        background: rgba(0, 0, 0, 0.6) !important;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        z-index: 999;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        transition: max-height 0.4s ease, opacity 0.4s ease, transform 0.3s ease;
+        overflow: hidden;
+    }
+
+        .booking-bar.mobile {
+            width: 95%;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+            .booking-bar.mobile.collapsed > *:not(.booking-toggle-btn) {
+                display: none;
+            }
+
+    .booking-toggle-btn {
+        background: rgba(0, 0, 0, 0.6) !important;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        margin: auto;
+        cursor: pointer;
+        z-index: 1001 !important;
+    }
+
+    .booking-bar .mud-button,
+    .booking-bar .mud-input,
+    .booking-bar .mud-select,
+    .booking-bar .mud-menu {
+        font-size: 0.85rem !important;
+        height: 38px !important;
+        min-height: 38px !important;
+        margin-bottom: 0.25rem;
+        color: #fff !important;
+    }
+
+    .booking-bar .mud-icon {
+        font-size: 1.1rem !important;
+    }
+
+
+    .promo-input {
+        min-width: 180px;
+        max-width: 200px;
+    }
+
+    .booking-toggle-tab {
+        height: 30px;
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.6) !important;
+        padding: 0.3rem 1rem;
+        border-radius: 12px 12px 0 0;
+        color: white !important;
+        cursor: pointer;
+        z-index: 1000;
+    }
+
+    .booking-item {
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+        min-width: 160px;
+        /* margin-bottom: 0.3rem; */
+    }
+
+    .booking-subtext {
+        font-size: 0.75rem;
+        color: white;
+        /* margin-top: 0.2rem; */
+        padding-left: 0.5rem;
+    }
+
+    /* Responsive Mobile */
+
+</style>
+
+@code {
+    private DateRange? selectedRange; // = new(DateTime.Today, DateTime.Today.AddDays(2));
+
+    // Corrección: debe ser MudDateRangePicker, no MudDatePicker
+    private MudDateRangePicker _picker;
+
+    private int adults;
+    private int children;
+    private string promoCode = "";
+    private bool isMobileVisible = false;
+    private bool isPickerOpen = false;
+    private bool isQuantityOpen = false;
+
+    private HashSet<DateTime> DisabledDays = new()
+    {
+        DateTime.Today.AddDays(5),
+        DateTime.Today.AddDays(10),
+        DateTime.Today.AddDays(12),
+    };
+
+    private bool IsDisabled(DateTime date) => DisabledDays.Contains(date.Date);
+
+    private void ConfirmBooking()
+    {
+        Console.WriteLine($"Reserva: {selectedRange?.Start:dd/MM/yyyy} al {selectedRange?.End:dd/MM/yyyy}, {adults} adultos, {children} niños, código: {promoCode}");
+    }
+
+    private void ToggleMobileBar() => isMobileVisible = !isMobileVisible;
+
+    private void TogglePickerPopover()
+    {
+        isPickerOpen = !isPickerOpen;
+    }
+    private void ClosePicker(bool apply)
+    {
+        isPickerOpen = false;
+        _picker.CloseAsync();
+    }
+
+
+    private void ToggleQuantityPopover()
+    {
+        isQuantityOpen = !isQuantityOpen;
+    }
+
+    private void CloseQuantityPopover(bool apply)
+    {
+        isQuantityOpen = false;
+    }
+}

@@ -1,0 +1,36 @@
+﻿@page "/"
+@using GCG.Web.Booking.Components.Sections
+
+<PageTitle>Refugio del sol</PageTitle>
+
+<Hero />
+<CallToAction />
+@* <AboutUs />
+<Booking.Web.App.Components.Sections.Services />
+
+<Gallery />
+<Reviews />
+<Location />
+<FAQ />
+<NewsLetter />
+<Footer /> *@
+
+@code {
+    @inject IJSRuntime JS
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Yield(); // deja que el DOM pinte
+            try
+            {
+                await JS.InvokeVoidAsync("animInitAOS");
+                await JS.InvokeVoidAsync("animInitGSAP");
+                await JS.InvokeVoidAsync("initPSWP", "#pswp-gallery");
+
+            }
+            catch { }
+        }
+    }
+}

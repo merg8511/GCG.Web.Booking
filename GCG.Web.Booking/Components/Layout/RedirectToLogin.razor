@@ -1,0 +1,19 @@
+﻿@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components.Authorization
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Construye el returnUrl con la ruta actual
+        var relative = Nav.ToBaseRelativePath(Nav.Uri);
+        var returnUrl = string.IsNullOrWhiteSpace(relative) ? "/" : "/" + relative;
+        var encoded = Uri.EscapeDataString(returnUrl);
+
+        // Redirige al endpoint /login (ya mapeado en Program.cs)
+        Nav.NavigateTo($"/login?returnUrl={encoded}", forceLoad: true);
+    }
+}

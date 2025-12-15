@@ -1,0 +1,73 @@
+﻿<MudAppBar Elevation="0" Class="booking-appbar main-container">
+    <div class="booking-container">
+        <!-- Bloque izquierda: Logo -->
+        <div class="booking-left">
+            @if (IsAdmin)
+            {
+                <MudIconButton Class="hide-on-mobile-only"
+                               Icon="@Icons.Material.Filled.Menu"
+                               Color="Color.Inherit"
+                               Edge="Edge.Start"
+                               OnClick="@((e) => DrawerToggle())" />
+            }
+
+            <MudImage Src="images/logo-blanco.png" Alt="Refugio del Sol" Height="50" />
+        </div>
+
+        <!-- Bloque centro: Navegación -->
+        <div class="booking-center hide-on-mobile">
+            <MudLink Underline="Underline.None" Color="Color.Inherit" Href="#home" Class="nav-item">HOME</MudLink>
+            <MudLink Underline="Underline.None" Color="Color.Inherit" Href="#services" Class="nav-item">Services</MudLink>
+            <MudLink Underline="Underline.None" Color="Color.Inherit" Href="#gallery" Class="nav-item">Gallery</MudLink>
+            <MudLink Underline="Underline.None" Color="Color.Inherit" Href="#review" Class="nav-item">Reviews</MudLink>
+            <MudLink Underline="Underline.None" Color="Color.Inherit" Href="#faq" Class="nav-item">FAQ</MudLink>
+            <MudButton Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.CalendarMonth"
+                       Class="pulse"
+                       Color="Color.Primary"
+                       Href="/booking">
+                Booking
+            </MudButton>
+        </div>
+
+        <!-- Bloque derecha: Reservar + menú -->
+        <div class="booking-right">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="ToggleDrawer" Class="show-on-mobile" />
+            <div class="hide-on-mobile">
+                <UserMenu />
+            </div>
+        </div>
+    </div>
+</MudAppBar>
+
+@if (IsAdmin)
+{
+    <MudDrawer @bind-Open="_drawerAdminOpen" Elevation="2">
+        <SidebarDesktop />
+    </MudDrawer>
+}
+
+<MudDrawer Class="booking-appbar" Anchor="Anchor.Left" Open="@_drawerOpen" Elevation="1" Breakpoint="Breakpoint.Md">
+    <SidebarMobile />
+
+    @if (IsAdmin)
+    {
+        <AdminShortcut />
+    }
+</MudDrawer>
+
+@code {
+    [Parameter] public bool IsAdmin { get; set; }
+    private bool _drawerOpen;
+    bool _drawerAdminOpen = true;
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    void DrawerToggle()
+    {
+        _drawerAdminOpen = !_drawerAdminOpen;
+    }
+}

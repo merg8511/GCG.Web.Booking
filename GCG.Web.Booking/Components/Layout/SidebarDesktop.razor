@@ -1,0 +1,52 @@
+﻿<MudDrawerHeader>
+    <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" />
+    <MudText Typo="Typo.h6" Class="pl-2">Admin</MudText>
+</MudDrawerHeader>
+<MudNavMenu>
+    <MudDivider Class="my-2" />
+    <MudNavGroup Title="MANAGEMENT" Class="mt-3" Expanded="true">
+        <MudNavLink Href="/admin/service-categories"
+                    Icon="@Icons.Material.Filled.Category"
+                    IconColor="Color.Inherit"
+                    Match="NavLinkMatch.All">
+            <MudText>
+                Service Categories
+            </MudText>
+        </MudNavLink>
+        <MudNavLink Href="admin/services"
+                    Icon="@Icons.Material.Filled.WorkOutline"
+                    IconColor="Color.Inherit"
+                    Match="NavLinkMatch.All">
+            <MudText>
+                Services
+            </MudText>
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="BOOKING" Expanded="true">
+        <MudNavLink Href="admin/reservas"
+                    Icon="@Icons.Material.Filled.EventNote"
+                    IconColor="Color.Inherit"
+                    Match="NavLinkMatch.All">
+            <MudText>
+                Reservas
+            </MudText>
+        </MudNavLink>
+        <MudNavLink Href="/admin/gestion"
+                    Icon="@Icons.Material.Filled.Build"
+                    IconColor="Color.Inherit"
+                    Match="NavLinkMatch.All">
+            <MudText>
+                Gestión
+            </MudText>
+        </MudNavLink>
+        <MudNavLink Href="/admin/estadisticas"
+                    Icon="@Icons.Material.Filled.BarChart"
+                    IconColor="Color.Inherit"
+                    Match="NavLinkMatch.All">
+            <MudText>
+                Estadísticas
+            </MudText>
+        </MudNavLink>
+    </MudNavGroup>
+</MudNavMenu>

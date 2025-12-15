@@ -1,0 +1,111 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProvider
+
+<MudThemeProvider Theme="@_theme" />
+<MudPopoverProvider />
+<MudDialogProvider FullWidth="true"
+                   MaxWidth="MaxWidth.Small"
+                   CloseButton="true"
+                   BackdropClick="false"
+                   Position="DialogPosition.Center"
+                   CloseOnEscapeKey="true"
+                   BackgroundClass="my-custom-class" />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <AppBar IsAdmin="@IsAdmin" />
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+<style>
+    .my-custom-class {
+        backdrop-filter: blur(10px);
+    }
+</style>
+
+@code {
+    @inject NavigationManager Nav
+    private MudTheme? _theme = null;
+    private bool IsAdmin = false;
+    private bool _needsReinit;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _theme = new()
+        {
+            PaletteLight = _lightPalette,
+            Typography = _typography,
+            LayoutProperties = new LayoutProperties()
+            {
+                DrawerWidthLeft = "270px"
+            }
+        };
+
+        Nav.LocationChanged += (_, __) =>
+        {
+            _needsReinit = true;     // pedimos reinit en el próximo render
+            InvokeAsync(StateHasChanged);
+        };
+
+        // var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        // var user = state.User;
+        // IsAdmin = user.Identity?.IsAuthenticated == true && user.IsInRole("Admin");
+        IsAdmin = false; // For testing purposes, assume the user is an admin
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || _needsReinit)
+        {
+            await Task.Delay(50);
+
+            try
+            {
+                await JS.InvokeVoidAsync("initAppBarScroll");
+                await JS.InvokeVoidAsync("animInitAOS");
+                await JS.InvokeVoidAsync("animInitGSAP");
+            }
+            catch { /* opcional: log */ }
+
+            _needsReinit = false;
+        }
+    }
+
+    private readonly PaletteLight _lightPalette = new()
+    {
+        Primary = "#219ebc",
+        Secondary = "#ffb703",
+        AppbarBackground = "#023047",
+        AppbarText = "#ffffff",
+        Background = "#f8f9fa",
+        Surface = "#ffffff",
+        DrawerBackground = "#023047",
+        DrawerText = "#ffffff",
+        DrawerIcon = "#ffb703",
+        TextPrimary = "#023047",
+        ActionDefault = "#fb8500",
+        Success = "#2a9d8f",
+        Warning = "#f4a261",
+        Error = "#e76f51",
+    };
+
+    private readonly Typography _typography = new()
+    {
+        Default = new DefaultTypography()
+        {
+            FontFamily = new[] { "Poppins", "sans-serif" }
+        }
+    };
+}

@@ -1,0 +1,88 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Nav
+
+<AuthorizeView>
+    <NotAuthorized>
+        <MudButton Variant="Variant.Text"
+                   Color="Color.Inherit"
+                   StartIcon="@Icons.Material.Filled.Person"
+                   OnClick="Login">
+            Login
+        </MudButton>
+    </NotAuthorized>
+
+    <Authorized>
+        <MudMenu Dense="true">
+            <ActivatorContent>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Inherit"
+                           StartIcon="@Icons.Material.Filled.Person">
+                    @DisplayName
+                </MudButton>
+            </ActivatorContent>
+            <ChildContent>
+                <MudMenuItem Href="/profile" Icon="@Icons.Material.Filled.AccountCircle">
+                    Perfil
+                </MudMenuItem>
+
+                <MudMenuItem Href="/my-bookings" Icon="@Icons.Material.Filled.EventNote">
+                    Mis reservas
+                </MudMenuItem>
+
+                @if (IsStaffOrAdmin)
+                {
+                    <MudMenuItem Href="/admin" Icon="@Icons.Material.Filled.Dashboard">
+                        Admin
+                    </MudMenuItem>
+                }
+
+                <MudDivider />
+
+                <MudMenuItem OnClick="Logout" Icon="@Icons.Material.Filled.Logout">
+                    Cerrar sesión
+                </MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    [CascadingParameter] private Task<AuthenticationState> AuthenticationStateTask { get; set; } = default!;
+
+    private string DisplayName { get; set; } = "Usuario";
+    private bool IsStaffOrAdmin { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var state = await AuthenticationStateTask;
+        var user = state.User;
+
+        if (user?.Identity?.IsAuthenticated == true)
+        {
+            // Elige el mejor nombre disponible: name > given_name + family_name > preferred_username > email
+            DisplayName =
+                user.FindFirst("name")?.Value
+                ?? $"{user.FindFirst("given_name")?.Value} {user.FindFirst("family_name")?.Value}".Trim()
+                ?? user.FindFirst("preferred_username")?.Value
+                ?? user.FindFirst("email")?.Value
+                ?? "Usuario";
+
+            // Chequea roles de realm
+            IsStaffOrAdmin = user.IsInRole("staff") || user.IsInRole("admin");
+        }
+    }
+
+    private void Login()
+    {
+        var relative = Nav.ToBaseRelativePath(Nav.Uri);
+        var returnUrl = string.IsNullOrWhiteSpace(relative) ? "/" : "/" + relative;
+        var encoded = Uri.EscapeDataString(returnUrl);
+        Nav.NavigateTo($"/login?returnUrl={encoded}", forceLoad: true);
+    }
+
+    private void Logout()
+    {
+        // Tu Program.cs ya mapeó /logout para cerrar sesión en cookie + OIDC
+        Nav.NavigateTo("/logout", forceLoad: true);
+    }
+}

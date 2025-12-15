@@ -1,0 +1,448 @@
+/*=========================================
+  =            MAIN LAYOUT                =
+  =========================================*/
+
+.booking-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.booking-left,
+.booking-center,
+.booking-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Distribución */
+.booking-left {
+    flex: 1;
+    justify-content: flex-start;
+}
+
+.booking-center {
+    flex: 2;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.booking-right {
+    flex: 1;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+/* Estilo de enlaces */
+.nav-item {
+    color: white;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    font-size: 0.9rem;
+    cursor: pointer;
+    position: relative !important;
+    display: inline-block !important;
+    transition: color 0.3s;
+    overflow: hidden;
+    text-decoration: none;
+}
+
+    .nav-item::after {
+        content: '';
+        position: absolute;
+        width: 0;
+        bottom: 0;
+        height: 2px;
+        display: block;
+        margin-top: 5px;
+        right: 0;
+        background: #bbb;
+        transition: width 0.4s ease;
+        transform: rotate(0deg);
+    }
+
+    .nav-item:hover::after {
+        width: 100%;
+        left: 0;
+        background: #bbb;
+    }
+
+/* MudMainContent sin padding */
+.mud-main-content {
+    padding-top: 0 !important;
+}
+
+/*Estilos CSS para animación suave*/
+
+.booking-appbar {
+    position: fixed; /* ahora fijo, no absolute */
+    top: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.6) !important;
+    backdrop-filter: blur(6px) !important;
+    transition: transform 0.4s ease, background-color 0.3s ease, opacity 0.4s ease !important;
+    z-index: 1000;
+    opacity: 1;
+}
+
+    .booking-appbar.hide {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+/* Mobile First - ocultamos centro en pantallas pequeñas */
+.hide-on-mobile {
+    display: none;
+}
+
+.hide-on-mobile-only {
+    display: inline-flex;
+}
+
+@media (max-width: 767px) {
+    .hide-on-mobile-only {
+        display: none !important;
+    }
+}
+
+.show-on-mobile {
+    display: inline-flex;
+}
+
+/* Mostrar navegación completa a partir de 768px */
+@media (min-width: 768px) {
+    .hide-on-mobile {
+        display: flex !important;
+    }
+
+    .show-on-mobile {
+        display: none !important;
+    }
+}
+
+/* =========================================
+   HERO SECTION
+   ========================================= */
+
+/* Contenedor principal del hero */
+.hero-section {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Wrapper del carousel con imagen */
+.carousel-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Imagen del carousel */
+.carousel {
+    height: 100vh;
+    width: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+/* Overlay mejorado con gradiente más pronunciado */
+.carousel-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top, 
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0.2) 100%
+    );
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Contenido del hero con backdrop blur */
+.hero-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+    z-index: 10;
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 1200px;
+    will-change: transform, opacity;
+    
+    /* Backdrop blur sutil para mejorar legibilidad */
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 16px;
+}
+
+/* Título principal */
+.hero-title {
+    font-weight: 700 !important;
+    letter-spacing: 0.08rem !important;
+    word-spacing: 0.2rem;
+    text-shadow: 
+        0 4px 8px rgba(0, 0, 0, 0.7),
+        0 0 20px rgba(0, 0, 0, 0.5);
+    font-size: clamp(3.5rem, 8vw, 6rem) !important;
+    line-height: 1.1;
+    text-transform: uppercase !important;
+    margin-bottom: 1.5rem;
+}
+
+/* Subtítulo mejorado */
+.hero-subtitle {
+    text-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.8),
+        0 0 20px rgba(0, 0, 0, 0.6);
+    
+    margin-bottom: 2rem;
+    
+    /* Mejora el line-height */
+    line-height: 1.6 !important;
+    font-size: clamp(1rem, 2.5vw, 1.25rem) !important;
+}
+
+/* Botón CTA mejorado */
+.btn-action {
+    font-size: 1.1rem !important;
+    padding: 1rem 3rem !important;
+    letter-spacing: 0.05em !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    
+    /* Sombra para destacar */
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Mejora de rendimiento para elementos animados */
+.gsap-hero-title, 
+.gsap-hero-subtitle, 
+.gsap-hero-cta, 
+.gsap-hero-bg {
+    will-change: transform, opacity;
+}
+
+/* =========================================
+   RESPONSIVE - TABLET
+   ========================================= */
+@media (max-width: 960px) {
+    .hero-content {
+        padding: 2rem 1.5rem;
+        max-width: 85%;
+    }
+    
+    .hero-title {
+        font-size: clamp(3rem, 7vw, 4.5rem) !important;
+        margin-bottom: 1.25rem;
+    }
+    
+    .hero-subtitle {
+        max-width: 90%;
+        font-size: clamp(0.95rem, 2.2vw, 1.15rem) !important;
+    }
+    
+    .btn-action {
+        padding: 0.9rem 2.5rem !important;
+        font-size: 1rem !important;
+    }
+}
+
+/* =========================================
+   RESPONSIVE - MOBILE
+   ========================================= */
+@media (max-width: 600px) {
+    .hero-content {
+        background: rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        padding: 1.5rem 1rem;
+        max-width: 90%;
+        border-radius: 12px;
+    }
+    
+    .hero-title {
+        font-size: clamp(2.5rem, 10vw, 3.5rem) !important;
+        letter-spacing: 0.05rem !important;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-subtitle {
+        max-width: 95%;
+        font-size: clamp(0.9rem, 4vw, 1rem) !important;
+        margin-bottom: 1.5rem;
+        line-height: 1.5 !important;
+    }
+    
+    .btn-action {
+        padding: 0.85rem 2rem !important;
+        font-size: 0.95rem !important;
+        width: 100%;
+        max-width: 250px;
+    }
+    
+    /* Overlay más fuerte en mobile */
+    .carousel-overlay {
+        background: linear-gradient(
+            to top, 
+            rgba(0, 0, 0, 0.8) 0%,
+            rgba(0, 0, 0, 0.5) 50%,
+            rgba(0, 0, 0, 0.3) 100%
+        );
+    }
+}
+
+/* =========================================
+   TRANSICIONES PERSONALIZADAS
+   ========================================= */
+
+/* Transición suave para el fade del carousel */
+.fade-in-smooth {
+    animation: fadeInSmooth 1s ease-in-out;
+}
+
+.fade-out-smooth {
+    animation: fadeOutSmooth 1s ease-in-out;
+}
+
+@keyframes fadeInSmooth {
+    from {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeOutSmooth {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+}
+
+/*=========================================
+  =           CTA SECTION             =
+  =========================================*/
+/* Mobile: ocupa el 100% del ancho con padding lateral */
+@media (max-width: 768px) {
+    .booking-bar {
+        width: 95%;
+        flex-direction: column;
+        align-items: stretch;
+        bottom: 0;
+        padding: 0.5rem 1rem 1rem;
+        max-height: 0;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+        .booking-bar.mobile-visible {
+            max-height: 400px;
+            opacity: 1;
+        }
+
+    .booking-toggle-tab {
+        height: 30px;
+        position: fixed;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.6);
+        padding: 0.3rem 1rem;
+        border-radius: 12px 12px 0 0;
+        color: white !important;
+        cursor: pointer;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/*=========================================
+  =           FOOTER SECTION           =
+  =========================================*/
+.footer-section {
+    padding: 3rem;
+    background-color: #f5f5f5;
+}
+
+.py-8 {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.px-10 {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+}
+
+.bg-no-repeat {
+    background-repeat: no-repeat;
+}
+
+.bg-center {
+    background-position: 50%;
+}
+
+.bg-cover {
+    background-size: cover;
+}
+
+.w-full {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.footer-section {
+    color: #ccc;
+    padding: 3rem 1rem;
+    background-image: url(images/footer-background.png);
+    min-height: 400px;
+}
+
+.footer-heading {
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+.footer-section a,
+.footer-section .mud-link {
+    color: #FFB703;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.footer-powered-link {
+    margin-left: 0.3rem;
+    font-weight: 600;
+    color: #FFB703;
+}
+
+.footer-text .mud-link {
+    color: #1a1a1a !important;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.2) !important;
+}

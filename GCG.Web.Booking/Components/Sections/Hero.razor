@@ -1,0 +1,59 @@
+﻿<div id="home" class="hero-section" data-aos="fade" data-aos-duration="700">
+    <MudCarousel Class="mud-width-full"
+                 Style="height:100vh;"
+                 ShowArrows="false"
+                 ShowBullets="false"
+                 EnableSwipeGesture="true"
+                 AutoCycle="true"
+                 AutoCycleTime="TimeSpan.FromMilliseconds(5000)"
+                 TData="HeroImage">
+        @foreach (var img in Images)
+        {
+            <MudCarouselItem Transition="Transition.Fade">
+                <div class="carousel-wrapper">
+                    <div class="carousel-overlay"></div>
+                    <MudImage Src="@img.Url"
+                              Alt="@img.Alt"
+                              loading="lazy"
+                              Class="carousel" />
+                </div>
+            </MudCarouselItem>
+        }
+    </MudCarousel>
+    <div class="hero-content">
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12">
+                <MudText class="hero-title">
+                    Refugio del Sol
+                </MudText>
+                <MudText Typo="Typo.h5" class="hero-subtitle">
+                    Descubre la tranquilidad y la belleza de nuestra playa privada
+                </MudText>
+                <MudButton Color="Color.Secondary"
+                           Variant="Variant.Filled"
+                           Size="Size.Large"
+                           OnClick="@(() => ScrollTo("aboutUs"))"
+                           Class="mt-4 btn-action"
+                           aria-label="Explorar servicios">
+                    Explorar
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </div>
+</div>
+
+@code {
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    private record HeroImage(string Url, string Alt);
+
+    private readonly List<HeroImage> Images = new()
+    {
+        new("https://fastly.picsum.photos/id/13/2500/1667.jpg?hmac=SoX9UoHhN8HyklRA4A3vcCWJMVtiBXUg0W4ljWTor7s", "Vista panorámica de playa privada al atardecer"),
+        new("https://fastly.picsum.photos/id/37/2000/1333.jpg?hmac=vpYLNsQZwU2szsZc4Uo17cW786vR0GEUVq4icaKopQI", "Aguas cristalinas y vegetación tropical"),
+        new("https://fastly.picsum.photos/id/77/1631/1102.jpg?hmac=sg0ArFCRjP1wlUg8vszg5RFfGiXZJkWEtqLLCRraeBw", "Zona de descanso frente al mar")
+    };
+
+    private async Task ScrollTo(string sectionId)
+        => await JS.InvokeVoidAsync("scrollToSection", sectionId);
+}

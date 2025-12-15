@@ -1,0 +1,44 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudStack Class="text-center px-6 py-4" AlignItems="AlignItems.Center" Justify="Justify.Center">
+            <MudAvatar Size="Size.Large"
+                       Rounded
+                       Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       Class="mx-auto mb-0">
+                <MudIcon Icon="@Icons.Material.Filled.Delete" Color="Color.Error" />
+            </MudAvatar>
+
+            <MudText Typo="Typo.h5" Class="mb-0">Delete</MudText>
+            <MudText Typo="Typo.subtitle1">
+                Are you sure you want to delete?
+            </MudText>
+        </MudStack>
+    </DialogContent>
+
+    <DialogActions>
+        <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       OnClick="Cancel"
+                       Class="px-4">
+                Cancel
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       OnClick="Confirm"
+                       Class="px-4">
+                Confirm
+            </MudButton>
+        </MudStack>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel() => MudDialog.Cancel();
+}
