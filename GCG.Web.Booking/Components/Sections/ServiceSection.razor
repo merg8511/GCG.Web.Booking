@@ -150,6 +150,203 @@
     </MudContainer>
 </section>
 
+<style>
+
+    .services-section {
+        background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%) !important;
+        padding: 2rem 0 !important;
+    }
+
+    .section-header {
+        margin-bottom: 4rem !important;
+        text-align: center !important;
+    }
+
+    .section-title {
+        font-weight: 700 !important;
+        color: #023047 !important;
+        margin-bottom: 1rem !important;
+        font-size: clamp(2rem, 5vw, 3rem) !important;
+    }
+
+    .section-subtitle {
+        color: #666 !important;
+        max-width: 600px !important;
+        margin: 0 auto !important;
+        font-size: clamp(1rem, 2vw, 1.125rem) !important;
+    }
+
+    /* Categorías */
+    .category-block {
+        margin-bottom: 5rem !important;
+    }
+
+    .category-header {
+        display: flex !important;
+        align-items: center !important;
+        gap: 1rem !important;
+        margin-bottom: 2rem !important;
+        padding-bottom: 1rem !important;
+        border-bottom: 3px solid #219ebc !important;
+    }
+
+    .category-icon {
+        color: #219ebc !important;
+    }
+
+    .category-title {
+        font-weight: 600 !important;
+        color: #023047 !important;
+        margin: 0 !important;
+    }
+
+    /* Cards de servicios */
+    .service-card {
+        height: 100% !important;
+        position: relative !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        overflow: hidden !important;
+        border-radius: 16px !important;
+    }
+
+        .service-card:hover {
+            transform: translateY(-8px) !important;
+            box-shadow: 0 12px 28px rgba(33, 158, 188, 0.25) !important;
+        }
+
+        .service-card.included-service {
+            border-left: 4px solid #2a9d8f !important;
+        }
+
+        .service-card.optional-service {
+            border-left: 4px solid #ffb703 !important;
+        }
+
+    /* Badges */
+    .optional-badge,
+    .included-badge {
+        position: absolute !important;
+        top: 12px !important;
+        right: 12px !important;
+        z-index: 2 !important;
+    }
+
+    /* Imagen */
+    .service-image {
+        transition: transform 0.5s ease !important;
+        object-fit: cover !important;
+    }
+
+    .service-card:hover .service-image {
+        transform: scale(1.08) !important;
+    }
+
+    /* Contenido */
+    .service-title {
+        font-weight: 600 !important;
+        color: #023047 !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .service-subtitle {
+        font-weight: 500 !important;
+        font-size: 0.875rem !important;
+    }
+
+    .service-description {
+        color: #666 !important;
+        line-height: 1.6 !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 3 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+
+    /* Featured Ribbon */
+    .featured-ribbon {
+        position: absolute !important;
+        top: 40px !important;
+        left: -35px !important;
+        background: linear-gradient(135deg, #ffb703 0%, #fb8500 100%) !important;
+        color: white !important;
+        padding: 4px 40px !important;
+        transform: rotate(-45deg) !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 4px 12px rgba(251, 133, 0, 0.4) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* CTA final */
+    .cta-container {
+        margin-top: 5rem !important;
+        padding: 3rem 2rem !important;
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.1) 0%, rgba(255, 183, 3, 0.1) 100%) !important;
+        border-radius: 20px !important;
+        text-align: center !important;
+    }
+
+    /* Animación pulse para botones */
+    @@keyframes pulse {
+        0%, 100% {
+            box-shadow: 0 0 0 0 rgba(33, 158, 188, 0.7);
+        }
+
+        50% {
+            box-shadow: 0 0 0 10px rgba(33, 158, 188, 0);
+        }
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    /* Responsive */
+    @@media (max-width: 960px) {
+        .services-section {
+            padding: 3rem 0 !important;
+        }
+
+        .section-header {
+            margin-bottom: 3rem !important;
+        }
+
+        .category-block {
+            margin-bottom: 3rem !important;
+        }
+
+        .category-header {
+            flex-direction: column !important;
+            text-align: center !important;
+            gap: 0.5rem !important;
+        }
+
+        .service-card {
+            margin-bottom: 1rem !important;
+        }
+
+        .cta-container {
+            margin-top: 3rem !important;
+            padding: 2rem 1rem !important;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .service-description {
+            -webkit-line-clamp: 4;
+        }
+
+        .featured-ribbon {
+            font-size: 0.65rem !important;
+            padding: 3px 35px !important;
+        }
+    }
+
+</style>
+
 @code {
     private int _delayCounter = 0;
 
