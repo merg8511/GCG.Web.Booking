@@ -1,0 +1,672 @@
+﻿<section id="faq" class="faq-section">
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-12">
+
+        <!-- Encabezado de la sección -->
+        <div class="section-header" data-aos="fade-up">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="section-title">
+                Preguntas Frecuentes
+            </MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="section-subtitle">
+                Encuentra respuestas a las dudas más comunes sobre tu estadía
+            </MudText>
+        </div>
+
+        <!-- Categorías de FAQ -->
+        <div class="faq-categories" data-aos="fade-up" data-aos-delay="100">
+            <MudChipSet T="string"
+                        @bind-SelectedValue="selectedCategory"
+                        SelectionMode="SelectionMode.SingleSelection"
+                        Class="justify-center">
+                <MudChip T="string"
+                         Text="Todas"
+                         Value="@("all")"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined"
+                         Default="true">
+                    Todas
+                </MudChip>
+                @foreach (var category in FaqCategories)
+                {
+                    <MudChip T="string"
+                             Text="@category.Name"
+                             Value="@category.Id"
+                             Color="Color.Primary"
+                             Variant="Variant.Outlined"
+                             Icon="@category.Icon">
+                        @category.Name
+                    </MudChip>
+                }
+            </MudChipSet>
+        </div>
+
+        <!-- Accordions de FAQ -->
+        <div class="faq-list" data-aos="fade-up" data-aos-delay="200">
+            @foreach (var categoryGroup in GroupedFaqs)
+            {
+                <div class="category-group" data-aos="fade-up" data-aos-delay="@GetDelay()">
+                    @if (selectedCategory == "all")
+                    {
+                        <div class="category-header-divider">
+                            <MudIcon Icon="@GetCategoryIcon(categoryGroup.Key)"
+                                     Color="Color.Primary"
+                                     Size="Size.Medium" />
+                            <MudText Typo="Typo.h5" Class="category-header-title">
+                                @GetCategoryName(categoryGroup.Key)
+                            </MudText>
+                        </div>
+                    }
+
+                    @foreach (var faq in categoryGroup)
+                    {
+                        <MudExpansionPanel Class="faq-panel">
+                            <TitleContent>
+                                <div class="panel-title-wrapper">
+                                    <MudIcon Icon="@Icons.Material.Filled.HelpOutline"
+                                             Color="Color.Primary"
+                                             Class="question-icon" />
+                                    <MudText Typo="Typo.h6" Class="question-text">
+                                        @faq.Question
+                                    </MudText>
+                                </div>
+                            </TitleContent>
+                            <ChildContent>
+                                <div class="answer-content">
+                                    <MudText Typo="Typo.body1" Class="answer-text">
+                                        @faq.Answer
+                                    </MudText>
+
+                                    @if (faq.BulletPoints.Any())
+                                    {
+                                        <ul class="answer-list">
+                                            @foreach (var point in faq.BulletPoints)
+                                            {
+                                                <li>
+                                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                                                             Size="Size.Small"
+                                                             Color="Color.Success"
+                                                             Class="mr-2" />
+                                                    @point
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(faq.ImageUrl))
+                                    {
+                                        <MudImage Src="@faq.ImageUrl"
+                                                  Alt="@faq.Question"
+                                                  Class="answer-image mt-3"
+                                                  Elevation="3"
+                                                  ObjectFit="ObjectFit.Cover" />
+                                    }
+
+                                    @if (!string.IsNullOrEmpty(faq.AdditionalInfo))
+                                    {
+                                        <MudAlert Severity="Severity.Info"
+                                                  Class="mt-3"
+                                                  Dense="true"
+                                                  Icon="@Icons.Material.Filled.Info">
+                                            @faq.AdditionalInfo
+                                        </MudAlert>
+                                    }
+                                </div>
+                            </ChildContent>
+                        </MudExpansionPanel>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        @if (!FilteredFaqs.Any())
+        {
+            <div class="no-results" data-aos="fade-up">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                         Size="Size.Large"
+                         Color="Color.Default"
+                         Class="mb-3" />
+                <MudText Typo="Typo.h6" Color="Color.Default">
+                    No hay preguntas en esta categoría
+                </MudText>
+            </div>
+        }
+    </MudContainer>
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-12">
+        <!-- CTA de contacto -->
+        <div class="cta-container" data-aos="fade-up" data-aos-delay="300">
+            <MudIcon Icon="@Icons.Material.Filled.ContactSupport"
+                     Size="Size.Large"
+                     Color="Color.Primary" />
+            <MudText Typo="Typo.h5" Align="Align.Center">
+                ¿No encontraste lo que buscabas?
+            </MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Default">
+                Estamos aquí para ayudarte. Contáctanos directamente y te responderemos lo antes posible.
+            </MudText>
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Justify="Justify.Center"
+                      Spacing="3"
+                      Class="contact-buttons">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Custom.Brands.WhatsApp"
+                           Href="https://wa.me/50312345678"
+                           Target="_blank">
+                    WhatsApp
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.Email"
+                           Href="mailto:info@refugiodelsol.com">
+                    Email
+                </MudButton>
+            </MudStack>
+        </div>
+    </MudContainer>
+</section>
+
+<style>
+    .faq-section {
+        background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+        padding: 2rem 0;
+    }
+
+    .section-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .section-title {
+        font-weight: 700;
+        color: #023047;
+        margin-bottom: 1rem;
+        font-size: clamp(2rem, 5vw, 3rem);
+    }
+
+    .section-subtitle {
+        color: #666;
+        max-width: 700px;
+        margin: 0 auto;
+        font-size: clamp(1rem, 2vw, 1.125rem);
+    }
+
+    /* Categorías */
+    .faq-categories {
+        margin-bottom: 3rem;
+        display: flex;
+        justify-content: center;
+    }
+
+    .justify-center {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Lista de FAQ */
+    .faq-list {
+        margin-bottom: 3rem;
+    }
+
+    .category-group {
+        margin-bottom: 2rem;
+    }
+
+    .category-header-divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #219ebc;
+    }
+
+    .category-header-title {
+        font-weight: 600;
+        color: #023047;
+        margin: 0;
+    }
+
+    /* Panels */
+    .faq-panel {
+        margin-bottom: 1rem;
+        border-radius: 12px !important;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+        .faq-panel:hover {
+            box-shadow: 0 4px 12px rgba(33, 158, 188, 0.15);
+            border-color: #219ebc;
+        }
+
+    .panel-title-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 100%;
+    }
+
+    .question-icon {
+        flex-shrink: 0;
+    }
+
+    .question-text {
+        font-weight: 600;
+        color: #023047;
+        margin: 0;
+        flex-grow: 1;
+    }
+
+    /* Contenido de respuesta */
+    .answer-content {
+        padding: 1rem 0;
+    }
+
+    .answer-text {
+        color: #666;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+    }
+
+    .answer-list {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+    }
+
+        .answer-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            color: #666;
+            line-height: 1.6;
+        }
+
+    .answer-image {
+        width: 100%;
+        max-width: 600px;
+        border-radius: 12px;
+        margin: 1rem 0;
+    }
+
+    /* No results */
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #666;
+    }
+
+    /* CTA de contacto */
+    .cta-container {
+        margin-top: 4rem;
+    }
+
+    .contact-card {
+        padding: 3rem 2rem;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.05) 0%, rgba(255, 183, 3, 0.05) 100%);
+    }
+
+    .contact-buttons {
+        margin-top: 1rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 960px) {
+        .faq-section {
+            padding: 3rem 0;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .faq-categories {
+            margin-bottom: 2rem;
+        }
+
+        .faq-list {
+            margin-bottom: 2rem;
+        }
+
+        .category-group {
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .panel-title-wrapper {
+            gap: 0.75rem;
+        }
+
+        .question-text {
+            font-size: 1rem;
+        }
+
+        .answer-content {
+            padding: 0.75rem 0;
+        }
+
+        .answer-list li {
+            font-size: 0.875rem;
+        }
+
+        .contact-card {
+            padding: 2rem 1rem;
+        }
+
+        .contact-buttons {
+            flex-direction: column;
+            width: 100%;
+        }
+
+            .contact-buttons .mud-button {
+                width: 100%;
+            }
+
+        .cta-container {
+            margin-top: 2rem;
+        }
+    }
+</style>
+
+@code {
+    private string selectedCategory = "all";
+    private int _delayCounter = 0;
+
+    // Categoría de FAQ
+    private record FaqCategory(string Id, string Name, string Icon);
+
+    private List<FaqCategory> FaqCategories = new()
+    {
+        new FaqCategory("reservas", "Reservas", Icons.Material.Filled.EventNote),
+        new FaqCategory("instalaciones", "Instalaciones", Icons.Material.Filled.Home),
+        new FaqCategory("ubicacion", "Ubicación", Icons.Material.Filled.LocationOn),
+        new FaqCategory("politicas", "Políticas", Icons.Material.Filled.Policy)
+    };
+
+    // Modelo de FAQ
+    private record Faq(
+        string Id,
+        string CategoryId,
+        string Question,
+        string Answer,
+        List<string> BulletPoints,
+        string? ImageUrl = null,
+        string? AdditionalInfo = null
+    );
+
+    // Datos mock de FAQs
+    private List<Faq> AllFaqs = new()
+    {
+        // Reservas
+        new Faq(
+            "faq-1",
+            "reservas",
+            "¿Cómo puedo hacer una reserva?",
+            "Hacer una reserva es muy sencillo. Puedes reservar directamente a través de nuestro sitio web o contactarnos por WhatsApp. Te pediremos las fechas deseadas, número de huéspedes y algunos datos básicos.",
+            new List<string>
+            {
+                "Selecciona tus fechas en el calendario",
+                "Indica el número de personas",
+                "Completa el formulario de reserva",
+                "Confirma con el pago inicial del 50%"
+            },
+            null,
+            "El saldo restante se paga al llegar al rancho."
+        ),
+        new Faq(
+            "faq-2",
+            "reservas",
+            "¿Cuál es la política de cancelación?",
+            "Entendemos que los planes pueden cambiar. Nuestra política de cancelación es flexible pero con algunas condiciones para proteger tanto a huéspedes como a propietarios.",
+            new List<string>
+            {
+                "Cancelación con +30 días: reembolso del 100%",
+                "Cancelación 15-30 días: reembolso del 50%",
+                "Cancelación con -15 días: sin reembolso",
+                "Emergencias médicas: evaluación caso por caso"
+            }
+        ),
+        new Faq(
+            "faq-3",
+            "reservas",
+            "¿Cuál es la estadía mínima?",
+            "Para poder disfrutar plenamente de todas las comodidades y la experiencia completa del rancho, tenemos las siguientes estadías mínimas según la temporada.",
+            new List<string>
+            {
+                "Temporada baja: 2 noches mínimo",
+                "Temporada media: 2 noches mínimo",
+                "Temporada alta y festivos: 3 noches mínimo",
+                "Semana Santa y Navidad: 5 noches mínimo"
+            }
+        ),
+        new Faq(
+            "faq-4",
+            "reservas",
+            "¿Qué incluye el precio de la reserva?",
+            "El precio de tu reserva incluye todo lo necesario para una estadía cómoda y sin preocupaciones. No hay costos ocultos ni sorpresas.",
+            new List<string>
+            {
+                "Uso completo de todas las instalaciones",
+                "Ropa de cama y toallas",
+                "Cocina totalmente equipada",
+                "WiFi de alta velocidad",
+                "Aire acondicionado en todas las habitaciones",
+                "Acceso a playa privada",
+                "Estacionamiento privado",
+                "Equipo de BBQ y parrilla"
+            },
+            "https://picsum.photos/id/1015/600/400",
+            "Los servicios adicionales como chef privado o transporte tienen un costo extra."
+        ),
+
+        // Instalaciones
+        new Faq(
+            "faq-5",
+            "instalaciones",
+            "¿Cuántas personas pueden hospedarse?",
+            "El rancho está diseñado para alojar cómodamente hasta 12 huéspedes, ideal para familias grandes o grupos de amigos.",
+            new List<string>
+            {
+                "4 habitaciones con camas queen",
+                "Capacidad oficial: 8 adultos + 4 niños",
+                "2 sofás cama disponibles (costo extra)",
+                "Baños privados en cada habitación"
+            },
+            "https://picsum.photos/id/1024/600/400"
+        ),
+        new Faq(
+            "faq-6",
+            "instalaciones",
+            "¿La cocina está equipada?",
+            "Sí, la cocina está completamente equipada con todo lo que necesitas para preparar desde desayunos sencillos hasta cenas elaboradas.",
+            new List<string>
+            {
+                "Estufa de gas y horno",
+                "Refrigeradora grande con congelador",
+                "Microondas y cafetera",
+                "Vajilla completa para 12+ personas",
+                "Ollas, sartenes y utensilios de cocina",
+                "Licuadora y procesador de alimentos"
+            },
+            "https://picsum.photos/id/175/600/400"
+        ),
+        new Faq(
+            "faq-7",
+            "instalaciones",
+            "¿Hay WiFi? ¿Qué tan rápido es?",
+            "Sí, ofrecemos WiFi de fibra óptica en toda la propiedad. La conexión es excelente para trabajo remoto, streaming o videollamadas.",
+            new List<string>
+            {
+                "Fibra óptica de 100 Mbps",
+                "Cobertura en todo el rancho",
+                "Múltiples puntos de acceso",
+                "Sin límite de datos"
+            },
+            null,
+            "La señal en la playa puede ser más débil pero funcional."
+        ),
+        new Faq(
+            "faq-8",
+            "instalaciones",
+            "¿La piscina es privada? ¿Tiene área para niños?",
+            "Sí, la piscina es completamente privada para uso exclusivo de nuestros huéspedes. Está diseñada para toda la familia.",
+            new List<string>
+            {
+                "Piscina de 8x4 metros",
+                "Área poco profunda para niños (60cm)",
+                "Zona profunda para adultos (1.6m)",
+                "Limpieza y mantenimiento diario"
+            },
+            "https://picsum.photos/id/136/600/400",
+            "Se recomienda supervisión adulta para niños en todo momento."
+        ),
+
+        // Ubicación
+        new Faq(
+            "faq-9",
+            "ubicacion",
+            "¿Qué tan lejos está el rancho del aeropuerto?",
+            "El rancho está estratégicamente ubicado para ser accesible pero suficientemente alejado para garantizar tranquilidad y privacidad.",
+            new List<string>
+            {
+                "Aeropuerto Internacional: 45 minutos",
+                "Carretera pavimentada todo el trayecto",
+                "Último kilómetro en camino de tierra (en buen estado)",
+                "Servicio de transporte disponible (opcional)"
+            }
+        ),
+        new Faq(
+            "faq-10",
+            "ubicacion",
+            "¿Hay tiendas o supermercados cerca?",
+            "Aunque el rancho está en una zona tranquila, hay opciones para abastecerse de todo lo necesario a poca distancia.",
+            new List<string>
+            {
+                "Tienda de conveniencia: 5 minutos en auto",
+                "Supermercado mediano: 15 minutos",
+                "Supermercado grande: 25 minutos",
+                "Recomendamos comprar antes de llegar"
+            },
+            null,
+            "Podemos coordinar servicio de compras previo a tu llegada (costo extra)."
+        ),
+        new Faq(
+            "faq-11",
+            "ubicacion",
+            "¿Qué atractivos turísticos hay cerca?",
+            "La ubicación del rancho es perfecta para explorar múltiples atractivos naturales y culturales de la región.",
+            new List<string>
+            {
+                "Volcán activo: 40 minutos",
+                "Cascada El Encanto: 30 minutos",
+                "Pueblo colonial: 35 minutos",
+                "Bosque nuboso: 1 hora",
+                "Avistamiento de tortugas (temporada): 20 minutos"
+            },
+            "https://picsum.photos/id/1036/600/400"
+        ),
+
+        // Políticas
+        new Faq(
+            "faq-12",
+            "politicas",
+            "¿Se permiten mascotas?",
+            "Desafortunadamente, por políticas de higiene y para garantizar la comodidad de todos los huéspedes, no permitimos mascotas en el rancho.",
+            new List<string>(),
+            null,
+            "Podemos recomendar excelentes hoteles pet-friendly en la zona si viajas con tu mascota."
+        ),
+        new Faq(
+            "faq-13",
+            "politicas",
+            "¿Se pueden hacer fiestas o eventos?",
+            "Permitimos reuniones familiares y celebraciones privadas siempre que se respeten las normas de convivencia y se notifique previamente.",
+            new List<string>
+            {
+                "Celebraciones familiares: permitidas",
+                "Música hasta las 10:00 PM",
+                "Máximo de visitantes: 20 personas",
+                "Eventos grandes: consultar disponibilidad",
+                "Fiestas ruidosas: no permitidas"
+            },
+            null,
+            "Mantener el volumen moderado es esencial para preservar la tranquilidad del lugar."
+        ),
+        new Faq(
+            "faq-14",
+            "politicas",
+            "¿Cuál es el horario de check-in y check-out?",
+            "Tenemos horarios flexibles para adaptarnos mejor a tus planes de viaje.",
+            new List<string>
+            {
+                "Check-in: a partir de las 3:00 PM",
+                "Check-out: hasta las 11:00 AM",
+                "Early check-in: sujeto a disponibilidad (sin costo)",
+                "Late check-out: sujeto a disponibilidad (puede tener costo)"
+            },
+            null,
+            "Si necesitas horarios especiales, contáctanos con anticipación."
+        ),
+        new Faq(
+            "faq-15",
+            "politicas",
+            "¿Qué pasa si hay daños durante mi estadía?",
+            "Solicitamos un depósito de seguridad reembolsable que se devuelve completamente si no hay daños a la propiedad.",
+            new List<string>
+            {
+                "Depósito de seguridad: $200",
+                "Reembolso completo: 48 horas después del check-out",
+                "Daños menores: se descuentan del depósito",
+                "Daños mayores: se facturan por separado"
+            },
+            null,
+            "Esperamos que todos nuestros huéspedes cuiden las instalaciones como si fueran propias."
+        )
+    };
+
+    // FAQs filtradas
+    private IEnumerable<Faq> FilteredFaqs
+    {
+        get
+        {
+            if (selectedCategory == "all")
+                return AllFaqs;
+
+            return AllFaqs.Where(f => f.CategoryId == selectedCategory);
+        }
+    }
+
+    // Agrupar FAQs por categoría
+    private IEnumerable<IGrouping<string, Faq>> GroupedFaqs
+    {
+        get
+        {
+            return FilteredFaqs.GroupBy(f => f.CategoryId);
+        }
+    }
+
+    private string GetCategoryName(string categoryId)
+    {
+        return FaqCategories.FirstOrDefault(c => c.Id == categoryId)?.Name ?? categoryId;
+    }
+
+    private string GetCategoryIcon(string categoryId)
+    {
+        return FaqCategories.FirstOrDefault(c => c.Id == categoryId)?.Icon ?? Icons.Material.Filled.Help;
+    }
+
+    private string GetDelay()
+    {
+        _delayCounter += 50;
+        if (_delayCounter > 200) _delayCounter = 50;
+        return _delayCounter.ToString();
+    }
+}
