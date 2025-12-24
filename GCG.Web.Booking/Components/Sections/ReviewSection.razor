@@ -1,0 +1,570 @@
+﻿@inject IJSRuntime JS
+
+<section id="review" class="reviews-section">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-12">
+
+        <!-- Encabezado de la sección -->
+        <div class="section-header" data-aos="fade-up">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="section-title">
+                Experiencias de Nuestros Huéspedes
+            </MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="section-subtitle">
+                Descubre por qué nuestros visitantes vuelven una y otra vez
+            </MudText>
+        </div>
+
+        <!-- Estadísticas generales -->
+        <div class="stats-container" data-aos="fade-up" data-aos-delay="100">
+            <MudGrid>
+                <MudItem xs="12" md="4" sm="4">
+                    <MudPaper Elevation="3" Class="stat-card">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Star"
+                                     Size="Size.Large"
+                                     Color="Color.Warning" />
+                            <MudText Typo="Typo.h3" Class="stat-number">@AverageRating.ToString("F1")</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Default">Calificación Promedio</MudText>
+                            <MudRating ReadOnly
+                                       SelectedValue="@((int)AverageRating)"
+                                       MaxValue="5"
+                                       Color="Color.Warning" />
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudPaper Elevation="3" Class="stat-card">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.Reviews"
+                                     Size="Size.Large"
+                                     Color="Color.Primary" />
+                            <MudText Typo="Typo.h3" Class="stat-number">@TotalReviews</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Default">Reseñas Totales</MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="4">
+                    <MudPaper Elevation="3" Class="stat-card">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@Icons.Material.Filled.ThumbUp"
+                                     Size="Size.Large"
+                                     Color="Color.Success" />
+                            <MudText Typo="Typo.h3" Class="stat-number">@RecommendationRate%</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Default">Recomendarían</MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </div>
+
+        <!-- Filtro por calificación -->
+        <div class="rating-filter" data-aos="fade-up" data-aos-delay="200">
+            <MudChipSet T="int"
+                        @bind-SelectedValue="selectedRating"
+                        SelectionMode="SelectionMode.SingleSelection"
+                        Class="justify-center">
+                <MudChip T="int"
+                         Text="Todas"
+                         Value="0"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined"
+                         Default="true">
+                    Todas las reseñas
+                </MudChip>
+                <MudChip T="int"
+                         Text="5 estrellas"
+                         Value="5"
+                         Color="Color.Warning"
+                         Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.Star">
+                    5 estrellas
+                </MudChip>
+                <MudChip T="int"
+                         Text="4 estrellas"
+                         Value="4"
+                         Color="Color.Warning"
+                         Variant="Variant.Outlined"
+                         Icon="@Icons.Material.Filled.Star">
+                    4 estrellas
+                </MudChip>
+            </MudChipSet>
+        </div>
+
+        <!-- Grid de reseñas -->
+        <div class="reviews-grid" data-aos="fade-up" data-aos-delay="300">
+            <MudGrid Spacing="4">
+                @foreach (var review in FilteredReviews)
+                {
+                    <MudItem xs="12" md="6" lg="4" data-aos="fade-up" data-aos-delay="@GetDelay()">
+                        <MudCard Class="review-card" Elevation="3">
+                            <MudCardHeader Class="review-header">
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Primary" Size="Size.Large">
+                                        @review.GuestInitials
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6" Class="guest-name">@review.GuestName</MudText>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudRating ReadOnly="true"
+                                                   SelectedValue="@review.Rating"
+                                                   MaxValue="5"
+                                                   Size="Size.Small"
+                                                   Color="Color.Warning" />
+                                        <MudText Typo="Typo.caption" Color="Color.Default">
+                                            @review.Date.ToString("MMM yyyy")
+                                        </MudText>
+                                    </MudStack>
+                                </CardHeaderContent>
+                                <CardHeaderActions>
+                                    @if (review.IsVerified)
+                                    {
+                                        <MudTooltip Text="Reserva verificada">
+                                            <MudChip T="string"
+                                                     Size="Size.Small"
+                                                     Color="Color.Success"
+                                                     Icon="@Icons.Material.Filled.Verified">
+                                                Verificado
+                                            </MudChip>
+                                        </MudTooltip>
+                                    }
+                                </CardHeaderActions>
+                            </MudCardHeader>
+
+                            <MudCardContent Class="review-content">
+                                <MudText Typo="Typo.body2" Class="review-text">
+                                    "@review.Comment"
+                                </MudText>
+
+                                @if (review.Highlights.Any())
+                                {
+                                    <MudStack Row="true" Class="mt-3" Spacing="1" Wrap="Wrap.Wrap">
+                                        @foreach (var highlight in review.Highlights)
+                                        {
+                                            <MudChip T="string"
+                                                     Size="Size.Small"
+                                                     Color="Color.Info"
+                                                     Variant="Variant.Text">
+                                                @highlight
+                                            </MudChip>
+                                        }
+                                    </MudStack>
+                                }
+                            </MudCardContent>
+
+                            @if (!string.IsNullOrEmpty(review.ImageUrl))
+                            {
+                                <MudCardMedia Image="@review.ImageUrl"
+                                              Height="180"
+                                              Class="review-image" />
+                            }
+
+                            <MudCardActions Class="review-actions">
+                                <MudIconButton Icon="@Icons.Material.Filled.ThumbUp"
+                                               Color="Color.Default"
+                                               Size="Size.Small" />
+                                <MudText Typo="Typo.caption" Color="Color.Default">
+                                    @review.HelpfulCount personas encontraron esto útil
+                                </MudText>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        @if (!FilteredReviews.Any())
+        {
+            <div class="no-results" data-aos="fade-up">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff"
+                         Size="Size.Large"
+                         Color="Color.Default"
+                         Class="mb-3" />
+                <MudText Typo="Typo.h6" Color="Color.Default">
+                    No hay reseñas con esta calificación
+                </MudText>
+            </div>
+        }
+
+        <!-- CTA para dejar reseña -->
+        <div class="cta-container" data-aos="fade-up" data-aos-delay="400">
+            <MudStack AlignItems="AlignItems.Center" Spacing="3">
+                <MudIcon Icon="@Icons.Material.Filled.RateReview"
+                         Size="Size.Large"
+                         Color="Color.Primary" />
+                <MudText Typo="Typo.h5" Align="Align.Center">
+                    ¿Ya nos visitaste?
+                </MudText>
+                <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Default">
+                    Comparte tu experiencia con futuros huéspedes
+                </MudText>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           Size="Size.Large"
+                           Style="color:black !important;"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="OpenReviewDialog">
+                    Escribir Reseña
+                </MudButton>
+            </MudStack>
+        </div>
+
+    </MudContainer>
+</section>
+
+<style>
+    .reviews-section {
+        background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+        padding: 2rem 0;
+    }
+
+    .section-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .section-title {
+        font-weight: 700;
+        color: #023047;
+        margin-bottom: 1rem;
+        font-size: clamp(2rem, 5vw, 3rem);
+    }
+
+    .section-subtitle {
+        color: #666;
+        max-width: 600px;
+        margin: 0 auto;
+        font-size: clamp(1rem, 2vw, 1.125rem);
+    }
+
+    /* Estadísticas */
+    .stats-container {
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        padding: 2rem 1rem;
+        min-height: 230px;
+        border-radius: 16px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: white;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(33, 158, 188, 0.2) !important;
+        }
+
+    .stat-number {
+        font-weight: 700;
+        color: #023047;
+        margin: 0;
+    }
+
+    /* Filtros */
+    .rating-filter {
+        margin-bottom: 3rem;
+        display: flex;
+        justify-content: center;
+    }
+
+    .justify-center {
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Grid de reseñas */
+    .reviews-grid {
+        margin-bottom: 3rem;
+    }
+
+    .review-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        border-radius: 16px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid #219ebc;
+    }
+
+        .review-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 28px rgba(33, 158, 188, 0.25) !important;
+        }
+
+    .review-header {
+        padding: 1.5rem 1.5rem 1rem 1.5rem;
+    }
+
+    .guest-name {
+        font-weight: 600;
+        color: #023047;
+        margin: 0;
+    }
+
+    .review-content {
+        flex-grow: 1;
+        padding: 0 1.5rem 1rem 1.5rem;
+    }
+
+    .review-text {
+        color: #666;
+        line-height: 1.7;
+        font-style: italic;
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .review-image {
+        object-fit: cover;
+        /* transition: transform 0.3s ease; */
+    }
+
+   /*  .review-card:hover .review-image {
+        transform: scale(1.05);
+    } */
+
+    .review-actions {
+        padding: 0.75rem 1.5rem;
+        border-top: 1px solid rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* No results */
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #666;
+    }
+
+    /* CTA final */
+    .cta-container {
+        margin-top: 4rem;
+        padding: 3rem 2rem;
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.1) 0%, rgba(255, 183, 3, 0.1) 100%);
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @@media (max-width: 960px) {
+        .reviews-section {
+            padding: 3rem 0;
+        }
+
+        .section-header {
+            margin-bottom: 2rem;
+        }
+
+        .stats-container {
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            padding: 1.5rem 1rem;
+        }
+
+        .rating-filter {
+            margin-bottom: 2rem;
+        }
+
+        .reviews-grid {
+            margin-bottom: 2rem;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .review-header {
+            padding: 1rem;
+        }
+
+        .review-content {
+            padding: 0 1rem 1rem 1rem;
+        }
+
+        .review-text {
+            -webkit-line-clamp: 6;
+        }
+
+        .review-actions {
+            padding: 0.5rem 1rem;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+
+        .cta-container {
+            margin-top: 2rem;
+            padding: 2rem 1rem;
+        }
+    }
+</style>
+
+@code {
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+
+    private int selectedRating = 0;
+    private int _delayCounter = 0;
+
+    // Modelo de reseña
+    private record Review(
+        string Id,
+        string GuestName,
+        string GuestInitials,
+        int Rating,
+        string Comment,
+        DateTime Date,
+        bool IsVerified,
+        int HelpfulCount,
+        List<string> Highlights,
+        string? ImageUrl = null
+    );
+
+    // Datos mock de reseñas
+    private List<Review> AllReviews = new()
+    {
+        new Review(
+            "rev-1",
+            "María González",
+            "MG",
+            5,
+            "Una experiencia inolvidable. El rancho superó todas nuestras expectativas. La playa privada es un sueño hecho realidad y las instalaciones están impecables. El personal fue extremadamente amable y atento. Definitivamente volveremos el próximo año.",
+            new DateTime(2024, 11, 15),
+            true,
+            24,
+            new List<string> { "Playa privada", "Limpieza", "Atención" },
+            "https://picsum.photos/id/1015/400/300"
+        ),
+        new Review(
+            "rev-2",
+            "Carlos Ramírez",
+            "CR",
+            5,
+            "Celebramos el cumpleaños de mi esposa aquí y fue perfecto. La cocina está muy bien equipada, pudimos preparar una cena especial sin problema. La piscina es hermosa y los niños no querían salir. Excelente relación calidad-precio.",
+            new DateTime(2024, 10, 28),
+            true,
+            18,
+            new List<string> { "Piscina", "Cocina equipada", "Para familias" }
+        ),
+        new Review(
+            "rev-3",
+            "Ana Martínez",
+            "AM",
+            4,
+            "Muy buen lugar para desconectar. Las habitaciones son cómodas y el aire acondicionado funciona perfecto (importante en la zona). La única sugerencia sería mejorar el WiFi en las habitaciones. Fuera de eso, todo excelente.",
+            new DateTime(2024, 10, 10),
+            true,
+            12,
+            new List<string> { "Habitaciones", "Ubicación", "Tranquilidad" },
+            "https://picsum.photos/id/1024/400/300"
+        ),
+        new Review(
+            "rev-4",
+            "Roberto Silva",
+            "RS",
+            5,
+            "Pasamos un fin de semana largo con amigos y fue espectacular. El área de BBQ es increíble, hicimos asados todos los días. La playa está a pasos y es preciosa. El rancho tiene todo lo que necesitas para no salir en toda tu estadía.",
+            new DateTime(2024, 9, 20),
+            true,
+            31,
+            new List<string> { "BBQ", "Playa", "Grupos grandes" },
+            "https://picsum.photos/id/225/400/300"
+        ),
+        new Review(
+            "rev-5",
+            "Laura Fernández",
+            "LF",
+            5,
+            "Como fotógrafa, quedé enamorada de los amaneceres y atardeceres desde el rancho. Las vistas son espectaculares. Es el lugar perfecto para una escapada romántica o simplemente para relajarse con un buen libro junto a la piscina.",
+            new DateTime(2024, 9, 5),
+            true,
+            27,
+            new List<string> { "Vistas", "Romántico", "Fotografía" },
+            "https://picsum.photos/id/13/400/300"
+        ),
+        new Review(
+            "rev-6",
+            "José Herrera",
+            "JH",
+            4,
+            "Excelente para reuniones familiares. Fuimos tres familias y había espacio de sobra. Los niños disfrutaron muchísimo la piscina y la playa. La cocina permitió que cocináramos sin problemas para todos. Muy recomendado.",
+            new DateTime(2024, 8, 18),
+            true,
+            15,
+            new List<string> { "Espacioso", "Familias", "Instalaciones" }
+        ),
+        new Review(
+            "rev-7",
+            "Patricia Morales",
+            "PM",
+            5,
+            "Celebramos nuestro aniversario aquí y no pudo ser más perfecto. El lugar es privado, tranquilo y hermoso. Las hamacas frente al mar son ideales para leer o simplemente descansar. El sonido de las olas es terapéutico. ¡Gracias por todo!",
+            new DateTime(2024, 8, 2),
+            true,
+            22,
+            new List<string> { "Privacidad", "Romántico", "Relajante" },
+            "https://picsum.photos/id/77/400/300"
+        ),
+        new Review(
+            "rev-8",
+            "Diego Vargas",
+            "DV",
+            5,
+            "Como grupo de amigos del trabajo buscábamos un lugar para hacer team building y esto fue perfecto. Las instalaciones permitieron que hiciéramos actividades tanto en la piscina como en la playa. La parrilla fue un hit. Volveremos seguro.",
+            new DateTime(2024, 7, 15),
+            true,
+            19,
+            new List<string> { "Grupos", "Actividades", "BBQ" }
+        ),
+        new Review(
+            "rev-9",
+            "Sofía Castillo",
+            "SC",
+            4,
+            "Hermoso lugar, muy limpio y bien mantenido. Las camas son cómodas y las habitaciones amplias. Lo único que mejoraría es agregar más sombra en el área de la piscina para el mediodía. De resto, todo perfecto. Los kayaks son un plus genial.",
+            new DateTime(2024, 7, 1),
+            true,
+            14,
+            new List<string> { "Limpieza", "Kayaks", "Comodidad" },
+            "https://picsum.photos/id/164/400/300"
+        )
+    };
+
+    // Propiedades calculadas
+    private double AverageRating => AllReviews.Average(r => r.Rating);
+    private int TotalReviews => AllReviews.Count;
+    private int RecommendationRate => (int)((double)AllReviews.Count(r => r.Rating >= 4) / TotalReviews * 100);
+
+    // Reseñas filtradas
+    private IEnumerable<Review> FilteredReviews
+    {
+        get
+        {
+            if (selectedRating == 0)
+                return AllReviews.OrderByDescending(r => r.Date);
+
+            return AllReviews
+                .Where(r => r.Rating == selectedRating)
+                .OrderByDescending(r => r.Date);
+        }
+    }
+
+    private string GetDelay()
+    {
+        _delayCounter += 50;
+        if (_delayCounter > 300) _delayCounter = 50;
+        return _delayCounter.ToString();
+    }
+
+    private void OpenReviewDialog()
+    {
+        // Aquí implementarías el diálogo para escribir una reseña
+        // Por ahora solo mostramos un snackbar
+        _snackbar.Add("Esta funcionalidad estará disponible próximamente", Severity.Info);
+    }
+}

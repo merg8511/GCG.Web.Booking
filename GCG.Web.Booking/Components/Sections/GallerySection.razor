@@ -1,0 +1,236 @@
+﻿@inject IJSRuntime JS
+
+<section id="gallery" class="gallery-section">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-12">
+
+        <!-- Encabezado de la sección -->
+        <div class="section-header" data-aos="fade-up">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="section-title">
+                Galería
+            </MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="section-subtitle">
+                Descubre cada rincón de tu próximo refugio tropical
+            </MudText>
+        </div>
+
+        <!-- Filtros de categoría -->
+        <div class="gallery-filters" data-aos="fade-up" data-aos-delay="100">
+            <MudChipSet T="string"
+                        @bind-SelectedValue="selectedFilter"
+                        Mandatory="true"
+                        Filter="true"
+                        Class="justify-center">
+
+                <MudChip T="string"
+                         Value="@("all")"
+                         Color="Color.Primary"
+                         Variant="Variant.Outlined">
+                    Todas
+                </MudChip>
+
+                @foreach (var category in GalleryCategories)
+                {
+                    <MudChip T="string"
+                             Value="@category.Id"
+                             Color="Color.Primary"
+                             Variant="Variant.Outlined"
+                             @key="category.Id">
+                        @category.Name
+                    </MudChip>
+                }
+            </MudChipSet>
+        </div>
+
+        <!-- Grid de imágenes con PhotoSwipe -->
+        <div id="pswp-gallery" class="gallery-grid" data-aos="fade-up" data-aos-delay="200">
+            @foreach (var image in FilteredImages)
+            {
+                <a href="@image.FullUrl"
+                   data-pswp-width="@image.Width"
+                   data-pswp-height="@image.Height"
+                   class="gallery-item"
+                   data-aos="zoom-in"
+                   data-aos-delay="@GetDelay()"
+                   target="_blank"
+                   rel="noreferrer">
+                    <div class="image-wrapper">
+                        <MudImage Src="@image.ThumbUrl"
+                                  Alt="@image.Caption"
+                                  ObjectFit="ObjectFit.Cover"
+                                  Class="gallery-image" />
+                        <div class="image-overlay">
+                            <div class="overlay-content">
+                                <MudIcon Icon="@Icons.Material.Filled.ZoomIn"
+                                         Size="Size.Large"
+                                         Class="zoom-icon" />
+                                <MudText Typo="Typo.subtitle1" Class="image-caption">
+                                    @image.Caption
+                                </MudText>
+                                <MudChip T="string"
+                                         Size="Size.Small"
+                                         Color="Color.Secondary"
+                                         Class="category-tag">
+                                    @image.CategoryName
+                                </MudChip>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+
+        <!-- Mensaje cuando no hay resultados -->
+        @if (!FilteredImages.Any())
+        {
+            <div class="no-results" data-aos="fade-up">
+                <MudIcon Icon="@Icons.Material.Filled.ImageNotSupported"
+                         Size="Size.Large"
+                         Color="Color.Default"
+                         Class="mb-3" />
+                <MudText Typo="Typo.h6" Color="Color.Default">
+                    No hay imágenes en esta categoría
+                </MudText>
+            </div>
+        }
+
+        <!-- CTA al final -->
+        <div class="cta-container" data-aos="fade-up" data-aos-delay="300">
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-3">
+                ¿Te gustó lo que viste?
+            </MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Default" Class="mb-4">
+                Reserva ahora y vive esta experiencia única en persona
+            </MudText>
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Justify="Justify.Center"
+                      Spacing="3">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.CalendarMonth"
+                           Href="#booking"
+                           Class="pulse">
+                    Ver Disponibilidad
+                </MudButton>
+            </MudStack>
+        </div>
+
+    </MudContainer>
+</section>
+
+
+@code {
+    private string selectedFilter = "all";
+    private int _delayCounter = 0;
+
+    // Categorías de galería
+    private record GalleryCategory(string Id, string Name);
+
+    private List<GalleryCategory> GalleryCategories = new()
+    {
+        new GalleryCategory("exterior", "Exteriores"),
+        new GalleryCategory("habitaciones", "Habitaciones"),
+        new GalleryCategory("piscina", "Piscina"),
+        new GalleryCategory("playa", "Playa"),
+        new GalleryCategory("cocina", "Cocina & Comedor"),
+        new GalleryCategory("areas", "Áreas Comunes")
+    };
+
+    // Modelo de imagen
+    private record GalleryImage(
+        string Id,
+        string CategoryId,
+        string CategoryName,
+        string Caption,
+        string ThumbUrl,
+        string FullUrl,
+        int Width,
+        int Height
+    );
+
+    // Datos mock de imágenes (URLs verificadas de Picsum)
+    private List<GalleryImage> AllImages = new()
+    {
+        // Exteriores
+        new GalleryImage("img-1", "exterior", "Exteriores", "Vista frontal del rancho",
+            "https://picsum.photos/id/1015/800/600", "https://picsum.photos/id/1015/1920/1280", 1920, 1280),
+        new GalleryImage("img-2", "exterior", "Exteriores", "Jardín tropical",
+            "https://picsum.photos/id/152/800/600", "https://picsum.photos/id/152/1920/1280", 1920, 1280),
+        new GalleryImage("img-3", "exterior", "Exteriores", "Área de BBQ",
+            "https://picsum.photos/id/225/800/600", "https://picsum.photos/id/225/1920/1280", 1920, 1280),
+
+        // Habitaciones
+        new GalleryImage("img-4", "habitaciones", "Habitaciones", "Habitación principal",
+            "https://picsum.photos/id/1024/800/600", "https://picsum.photos/id/1024/1920/1280", 1920, 1280),
+        new GalleryImage("img-5", "habitaciones", "Habitaciones", "Habitación con vista al mar",
+            "https://picsum.photos/id/1031/800/600", "https://picsum.photos/id/1031/1920/1280", 1920, 1280),
+        new GalleryImage("img-6", "habitaciones", "Habitaciones", "Suite con balcón",
+            "https://picsum.photos/id/1041/800/600", "https://picsum.photos/id/1041/1920/1280", 1920, 1280),
+
+        // Piscina
+        new GalleryImage("img-7", "piscina", "Piscina", "Piscina infinity",
+            "https://picsum.photos/id/136/800/600", "https://picsum.photos/id/136/1920/1280", 1920, 1280),
+        new GalleryImage("img-8", "piscina", "Piscina", "Área de descanso junto a la piscina",
+            "https://picsum.photos/id/164/800/600", "https://picsum.photos/id/164/1920/1280", 1920, 1280),
+        new GalleryImage("img-9", "piscina", "Piscina", "Atardecer en la piscina",
+            "https://picsum.photos/id/146/800/600", "https://picsum.photos/id/146/1920/1280", 1920, 1280),
+
+        // Playa
+        new GalleryImage("img-10", "playa", "Playa", "Playa privada",
+            "https://picsum.photos/id/13/800/600", "https://picsum.photos/id/13/1920/1280", 1920, 1280),
+        new GalleryImage("img-11", "playa", "Playa", "Kayaks disponibles",
+            "https://picsum.photos/id/37/800/600", "https://picsum.photos/id/37/1920/1280", 1920, 1280),
+        new GalleryImage("img-12", "playa", "Playa", "Hamacas frente al mar",
+            "https://picsum.photos/id/77/800/600", "https://picsum.photos/id/77/1920/1280", 1920, 1280),
+
+        // Cocina & Comedor
+        new GalleryImage("img-13", "cocina", "Cocina & Comedor", "Cocina completamente equipada",
+            "https://picsum.photos/id/175/800/600", "https://picsum.photos/id/175/1920/1280", 1920, 1280),
+        new GalleryImage("img-14", "cocina", "Cocina & Comedor", "Comedor con vista panorámica",
+            "https://picsum.photos/id/198/800/600", "https://picsum.photos/id/198/1920/1280", 1920, 1280),
+        new GalleryImage("img-15", "cocina", "Cocina & Comedor", "Bar y área social",
+            "https://picsum.photos/id/292/800/600", "https://picsum.photos/id/292/1920/1280", 1920, 1280),
+
+        // Áreas Comunes
+        new GalleryImage("img-16", "areas", "Áreas Comunes", "Sala de estar",
+            "https://picsum.photos/id/447/800/600", "https://picsum.photos/id/447/1920/1280", 1920, 1280),
+        new GalleryImage("img-17", "areas", "Áreas Comunes", "Terraza techada",
+            "https://picsum.photos/id/342/800/600", "https://picsum.photos/id/342/1920/1280", 1920, 1280),
+        new GalleryImage("img-18", "areas", "Áreas Comunes", "Zona de juegos",
+            "https://picsum.photos/id/274/800/600", "https://picsum.photos/id/274/1920/1280", 1920, 1280),
+    };
+
+    // Imágenes filtradas
+    private IEnumerable<GalleryImage> FilteredImages =>
+        selectedFilter == "all"
+            ? AllImages
+            : AllImages.Where(img => img.CategoryId == selectedFilter);
+
+    private string GetDelay()
+    {
+        _delayCounter += 50;
+        if (_delayCounter > 300) _delayCounter = 50;
+        return _delayCounter.ToString();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Pequeño delay para asegurar que el DOM esté listo
+            await Task.Delay(100);
+
+            try
+            {
+                // Inicializar PhotoSwipe para la galería
+                await JS.InvokeVoidAsync("initPSWP", "#pswp-gallery");
+            }
+            catch (Exception ex)
+            {
+                // Log opcional: el PhotoSwipe puede no estar disponible en primera carga
+                Console.WriteLine($"PhotoSwipe init warning: {ex.Message}");
+            }
+        }
+    }
+}
