@@ -1,0 +1,368 @@
+﻿@page "/services"
+
+@using GCG.Web.Booking.Models
+
+<section id="services" class="services-section">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-12">
+
+        <!-- Encabezado de la sección -->
+        <div class="section-header" data-aos="fade-up">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="section-title">
+                Nuestros Servicios
+            </MudText>
+            <MudText Typo="Typo.body1" Align="Align.Center" Class="section-subtitle">
+                Todo lo que necesitas para una experiencia inolvidable
+            </MudText>
+        </div>
+
+        <!-- Servicios por categoría -->
+        @foreach (var category in ServiceCategories)
+        {
+            <div class="category-block" data-aos="fade-up" data-aos-delay="100">
+
+                <!-- Título de categoría -->
+                <div class="category-header">
+                    <MudIcon Icon="@category.Icon" Size="Size.Large" Class="category-icon" />
+                    <MudText Typo="Typo.h4" Class="category-title">
+                        @category.Name
+                    </MudText>
+                </div>
+
+                <!-- Grid de servicios -->
+                <MudGrid Spacing="4" Class="mt-6">
+                    @foreach (var service in GetServicesByCategory(category.Id))
+                    {
+                        <MudItem xs="12" sm="6" md="4" data-aos="zoom-in" data-aos-delay="@GetDelay()">
+                            <MudCard Class="@(service.IsOptionalBool ? "service-card optional-service" : "service-card included-service")"
+                                     Elevation="3">
+
+                                <!-- Badge para servicios opcionales -->
+                                @if (service.IsOptionalBool)
+                                {
+                                    <div class="optional-badge">
+                                        <MudChip T="string"
+                                                 Size="Size.Small"
+                                                 Color="Color.Warning"
+                                                 Icon="@Icons.Material.Filled.AttachMoney">
+                                            Adicional
+                                        </MudChip>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="included-badge">
+                                        <MudChip T="string"
+                                                 Size="Size.Small"
+                                                 Color="Color.Success"
+                                                 Icon="@Icons.Material.Filled.CheckCircle">
+                                            Incluido
+                                        </MudChip>
+                                    </div>
+                                }
+
+                                <!-- Imagen del servicio -->
+                                <MudCardMedia Image="@service.ImageUrl"
+                                              Height="200"
+                                              Class="service-image" />
+
+                                <MudCardContent Class="pa-4">
+                                    <!-- Título y subtítulo -->
+                                    <MudText Typo="Typo.h6" Class="service-title">
+                                        @service.Title
+                                    </MudText>
+
+                                    @if (!string.IsNullOrEmpty(service.Subtitle))
+                                    {
+                                        <MudText Typo="Typo.body2"
+                                                 Color="Color.Primary"
+                                                 Class="service-subtitle mb-2">
+                                            @service.Subtitle
+                                        </MudText>
+                                    }
+
+                                    <!-- Descripción -->
+                                    <MudText Typo="Typo.body2"
+                                             Color="Color.Default"
+                                             Class="service-description">
+                                        @service.Description
+                                    </MudText>
+
+                                    <!-- Precio para servicios opcionales -->
+                                    @if (service.IsOptionalBool && service.PricePerDay.HasValue)
+                                    {
+                                        <MudDivider Class="my-3" />
+                                        <MudStack Row="true"
+                                                  AlignItems="AlignItems.Center"
+                                                  Justify="Justify.SpaceBetween">
+                                            <MudText Typo="Typo.body2" Color="Color.Default">
+                                                Precio por día:
+                                            </MudText>
+                                            <MudText Typo="Typo.h6" Color="Color.Warning">
+                                                $@service.PricePerDay.Value.ToString("N2")
+                                            </MudText>
+                                        </MudStack>
+                                    }
+                                </MudCardContent>
+
+                                @if (service.IsFeaturedBool)
+                                {
+                                    <div class="featured-ribbon">
+                                        <MudIcon Icon="@Icons.Material.Filled.Star"
+                                                 Size="Size.Small"
+                                                 Class="mr-1" />
+                                        Destacado
+                                    </div>
+                                }
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </div>
+        }
+
+        <!-- CTA al final -->
+        <div class="cta-container" data-aos="fade-up" data-aos-delay="200">
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">
+                ¿Listo para vivir esta experiencia?
+            </MudText>
+            <MudStack Row="true"
+                      AlignItems="AlignItems.Center"
+                      Justify="Justify.Center"
+                      Spacing="3">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.CalendarMonth"
+                           Href="#booking"
+                           Class="pulse">
+                    Reservar Ahora
+                </MudButton>
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.ContactMail"
+                           Href="#contacto">
+                    Contactar
+                </MudButton>
+            </MudStack>
+        </div>
+
+    </MudContainer>
+</section>
+
+@code {
+    private int _delayCounter = 0;
+
+    // Datos mock de categorías
+    private List<ServiceCategory> ServiceCategories = new()
+    {
+        new ServiceCategory
+        {
+            Id = "cat-1",
+            Name = "Alojamiento",
+            Icon = Icons.Material.Filled.Hotel,
+            Order = 1,
+            IsActive = 1
+        },
+        new ServiceCategory
+        {
+            Id = "cat-2",
+            Name = "Gastronomía",
+            Icon = Icons.Material.Filled.Restaurant,
+            Order = 2,
+            IsActive = 1
+        },
+        new ServiceCategory
+        {
+            Id = "cat-3",
+            Name = "Recreación",
+            Icon = Icons.Material.Filled.Pool,
+            Order = 3,
+            IsActive = 1
+        },
+        new ServiceCategory
+        {
+            Id = "cat-4",
+            Name = "Servicios Adicionales",
+            Icon = Icons.Material.Filled.RoomService,
+            Order = 4,
+            IsActive = 1
+        }
+    };
+
+    // Datos mock de servicios
+    private List<Service> Services = new()
+{
+    // Alojamiento
+    new Service
+    {
+        Id = "srv-1",
+        CategoryId = "cat-1",
+        Title = "Habitaciones Confortables",
+        Subtitle = "Hasta 12 huéspedes",
+        Description = "4 habitaciones completamente equipadas con aire acondicionado, camas queen, closet y baño privado.",
+        ImageUrl = "https://images.unsplash.com/photo-1760573776062-7d2a7baeb49d?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 1
+    },
+    new Service
+    {
+        Id = "srv-2",
+        CategoryId = "cat-1",
+        Title = "Ropa de Cama Premium",
+        Subtitle = "Confort garantizado",
+        Description = "Sábanas de alta calidad, almohadas de diferentes firmezas y toallas suaves incluidas.",
+        ImageUrl = "https://images.unsplash.com/photo-1619001904482-b0628b82b3e9?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 0
+    },
+
+    // Gastronomía
+    new Service
+    {
+        Id = "srv-3",
+        CategoryId = "cat-2",
+        Title = "Cocina Totalmente Equipada",
+        Subtitle = "Para chefs caseros",
+        Description = "Estufa de gas, horno, refrigeradora, microondas, cafetera y toda la batería de cocina necesaria.",
+        ImageUrl = "https://images.unsplash.com/photo-1757387240036-d7eb9b096c40?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 1
+    },
+    new Service
+    {
+        Id = "srv-4",
+        CategoryId = "cat-2",
+        Title = "BBQ & Rancho",
+        Subtitle = "Parrilladas épicas",
+        Description = "Área de BBQ con parrilla de carbón y gas, rancho techado con mesa para 12 personas.",
+        ImageUrl = "https://images.unsplash.com/photo-1534177616072-ef7dc120449d?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 0
+    },
+    new Service
+    {
+        Id = "srv-5",
+        CategoryId = "cat-2",
+        Title = "Chef Privado",
+        Subtitle = "Menú personalizado",
+        Description = "Servicio de chef profesional que prepara tus comidas favoritas. Incluye compra de ingredientes y servicio completo.",
+        ImageUrl = "https://images.unsplash.com/photo-1717838207789-62684e75a770?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 1,
+        IsFeatured = 1,
+        PricePerDay = 150.00m
+    },
+
+    // Recreación
+    new Service
+    {
+        Id = "srv-6",
+        CategoryId = "cat-3",
+        Title = "Piscina Privada",
+        Subtitle = "Refresco y diversión",
+        Description = "Piscina de agua cristalina con área poco profunda para niños, rodeada de jardín tropical.",
+        ImageUrl = "https://images.unsplash.com/photo-1729605412044-81f6acce4370?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 1
+    },
+    new Service
+    {
+        Id = "srv-7",
+        CategoryId = "cat-3",
+        Title = "Playa Privada",
+        Subtitle = "Acceso exclusivo",
+        Description = "Acceso directo a playa de arena negra volcánica con sillas, sombrillas y kayaks incluidos.",
+        ImageUrl = "https://images.unsplash.com/photo-1674423094953-599de4b54f69?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 1
+    },
+    new Service
+    {
+        Id = "srv-8",
+        CategoryId = "cat-3",
+        Title = "Zona de Juegos",
+        Subtitle = "Entretenimiento familiar",
+        Description = "Área recreativa con juegos de mesa, red de voleibol playero y zona de hamacas.",
+        ImageUrl = "https://images.unsplash.com/photo-1737625774333-60d9feaa4d2b?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 0
+    },
+
+    // Servicios Adicionales
+    new Service
+    {
+        Id = "srv-9",
+        CategoryId = "cat-4",
+        Title = "WiFi de Alta Velocidad",
+        Subtitle = "Mantente conectado",
+        Description = "Internet de fibra óptica en toda la propiedad, perfecto para trabajo remoto o streaming.",
+        ImageUrl = "https://images.unsplash.com/photo-1745847768408-b7b83796cae6?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 0,
+        IsFeatured = 0
+    },
+    new Service
+    {
+        Id = "srv-10",
+        CategoryId = "cat-4",
+        Title = "Servicio de Limpieza",
+        Subtitle = "Durante tu estadía",
+        Description = "Limpieza diaria de áreas comunes y cambio de toallas. Mantén el rancho impecable sin esfuerzo.",
+        ImageUrl = "https://images.unsplash.com/photo-1686828751885-040f0a0fb77a?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 1,
+        IsFeatured = 0,
+        PricePerDay = 50.00m
+    },
+    new Service
+    {
+        Id = "srv-11",
+        CategoryId = "cat-4",
+        Title = "Transporte desde Aeropuerto",
+        Subtitle = "Traslado cómodo",
+        Description = "Servicio de pick-up desde el aeropuerto internacional hasta el rancho en vehículo con AC.",
+        ImageUrl = "https://images.unsplash.com/photo-1761397300888-348e0dbdcc09?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 1,
+        IsFeatured = 0,
+        PricePerDay = 75.00m
+    },
+    new Service
+    {
+        Id = "srv-12",
+        CategoryId = "cat-4",
+        Title = "Tours Personalizados",
+        Subtitle = "Explora la zona",
+        Description = "Tours guiados a volcanes, cascadas, pueblos coloniales y atracciones locales. Incluye transporte.",
+        ImageUrl = "https://images.unsplash.com/photo-1669694841884-95d35a6bc287?fm=jpg&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&ixlib=rb-4.1.0&q=60&w=3000",
+        IsActive = 1,
+        IsOptional = 1,
+        IsFeatured = 1,
+        PricePerDay = 120.00m
+    }
+};
+
+    private List<Service> GetServicesByCategory(string categoryId)
+    {
+        return Services
+            .Where(s => s.CategoryId == categoryId && s.IsActiveBool)
+            .OrderByDescending(s => s.IsFeaturedBool)
+            .ThenBy(s => s.IsOptionalBool)
+            .ToList();
+    }
+
+    private string GetDelay()
+    {
+        _delayCounter += 50;
+        if (_delayCounter > 300) _delayCounter = 50;
+        return _delayCounter.ToString();
+    }
+}
