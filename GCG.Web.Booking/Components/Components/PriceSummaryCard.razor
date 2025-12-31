@@ -1,0 +1,257 @@
+﻿@using GCG.Web.Booking.Services
+@inject BookingStateService BookingState
+
+<MudCard Elevation="4" Class="price-summary-card">
+    <MudCardHeader Class="summary-header">
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6" Class="summary-title">
+                <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-2" />
+                Resumen de Reserva
+            </MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+
+    <MudCardContent Class="summary-content">
+        
+        @if (BookingState.SelectedDates?.Start != null && BookingState.SelectedDates?.End != null)
+        {
+            <!-- Fechas -->
+            <div class="summary-section">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default" Class="section-label">
+                    <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Size="Size.Small" Class="mr-1" />
+                    Fechas
+                </MudText>
+                <MudStack Spacing="1" Class="mt-2">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.body2">Check-in:</MudText>
+                        <MudText Typo="Typo.body2"><strong>@BookingState.SelectedDates.Start.Value.ToString("dd MMM yyyy")</strong></MudText>
+                    </MudStack>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.body2">Check-out:</MudText>
+                        <MudText Typo="Typo.body2"><strong>@BookingState.SelectedDates.End.Value.ToString("dd MMM yyyy")</strong></MudText>
+                    </MudStack>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.body2">Noches:</MudText>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@BookingState.GetNumberOfNights()</MudChip>
+                    </MudStack>
+                </MudStack>
+            </div>
+
+            <MudDivider Class="my-3" />
+
+            <!-- Huéspedes -->
+            <div class="summary-section">
+                <MudText Typo="Typo.subtitle2" Color="Color.Default" Class="section-label">
+                    <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small" Class="mr-1" />
+                    Huéspedes
+                </MudText>
+                <MudStack Spacing="1" Class="mt-2">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.body2">Adultos:</MudText>
+                        <MudText Typo="Typo.body2"><strong>@BookingState.Adults</strong></MudText>
+                    </MudStack>
+                    @if (BookingState.Children > 0)
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.body2">Niños:</MudText>
+                            <MudText Typo="Typo.body2"><strong>@BookingState.Children</strong></MudText>
+                        </MudStack>
+                    }
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.body2">Total:</MudText>
+                        <MudChip T="string"  Size="Size.Small" Color="Color.Success">@BookingState.GetTotalGuests() personas</MudChip>
+                    </MudStack>
+                </MudStack>
+            </div>
+
+            <MudDivider Class="my-3" />
+
+            <!-- Precios -->
+            @if (BookingState.IsAvailable && BookingState.BasePrice > 0)
+            {
+                <div class="summary-section">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Default" Class="section-label">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Small" Class="mr-1" />
+                        Desglose de Precios
+                    </MudText>
+                    <MudStack Spacing="1" Class="mt-2">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.body2">
+                                $250 × @BookingState.GetNumberOfNights() noche@(BookingState.GetNumberOfNights() != 1 ? "s" : "")
+                            </MudText>
+                            <MudText Typo="Typo.body2"><strong>$@BookingState.BasePrice.ToString("N2")</strong></MudText>
+                        </MudStack>
+
+                        <!-- Servicios opcionales -->
+                        @if (BookingState.OptionalServicesTotal > 0)
+                        {
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.body2">Servicios opcionales</MudText>
+                                <MudText Typo="Typo.body2"><strong>$@BookingState.OptionalServicesTotal.ToString("N2")</strong></MudText>
+                            </MudStack>
+                        }
+
+                        <!-- Descuento -->
+                        @if (BookingState.DiscountAmount > 0)
+                        {
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.body2" Color="Color.Success">
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalOffer" Size="Size.Small" Class="mr-1" />
+                                    Descuento
+                                </MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Success">
+                                    <strong>-$@BookingState.DiscountAmount.ToString("N2")</strong>
+                                </MudText>
+                            </MudStack>
+                        }
+                    </MudStack>
+                </div>
+
+                <MudDivider Class="my-3" />
+
+                <!-- Total -->
+                <div class="summary-total">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                        <MudText Typo="Typo.h6">Total</MudText>
+                        <MudText Typo="Typo.h5" Color="Color.Primary" Class="total-price">
+                            $@CalculateTotal().ToString("N2")
+                        </MudText>
+                    </MudStack>
+
+                    <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Filled.Info">
+                        <MudText Typo="Typo.caption">
+                            Depósito requerido: <strong>$@(CalculateTotal() * 0.5m).ToString("N2")</strong> (50%)
+                        </MudText>
+                    </MudAlert>
+                </div>
+            }
+            else if (!BookingState.IsAvailable && !string.IsNullOrEmpty(BookingState.UnavailabilityReason))
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true">
+                    Por favor, verifica la disponibilidad para ver el precio
+                </MudAlert>
+            }
+        }
+        else
+        {
+            <!-- Estado vacío -->
+            <div class="empty-state">
+                <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" 
+                        Size="Size.Large" 
+                        Color="Color.Default" 
+                        Class="mb-2" />
+                <MudText Typo="Typo.body2" Align="Align.Center" Color="Color.Default">
+                    Selecciona tus fechas y huéspedes para ver el precio estimado
+                </MudText>
+            </div>
+        }
+
+    </MudCardContent>
+
+    <!-- Información adicional -->
+    <MudCardActions Class="summary-footer">
+        <MudStack Spacing="1" Class="pa-3 w-100">
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+                <MudText Typo="Typo.caption">Cancelación gratuita hasta 30 días antes</MudText>
+            </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Color="Color.Success" />
+                <MudText Typo="Typo.caption">Pago seguro y protegido</MudText>
+            </MudStack>
+            <MudStack Row="true" AlignItems="AlignItems.Start" Spacing="1">
+                <MudIcon Icon="@Icons.Material.Filled.Star" Size="Size.Small" Color="Color.Warning" />
+                <MudText Typo="Typo.caption">4.9/5 estrellas • 89 reseñas</MudText>
+            </MudStack>
+        </MudStack>
+    </MudCardActions>
+
+</MudCard>
+
+<style>
+    .price-summary-card {
+        border-radius: 16px;
+        border: 2px solid #219ebc;
+        overflow: hidden;
+    }
+
+    .summary-header {
+        background: linear-gradient(135deg, #219ebc 0%, #023047 100%);
+        color: white;
+        padding: 1.5rem;
+    }
+
+    .summary-title {
+        color: white;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    .summary-content {
+        padding: 1.5rem;
+    }
+
+    .summary-section {
+        margin-bottom: 0.5rem;
+    }
+
+    .section-label {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .summary-total {
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.1) 0%, rgba(255, 183, 3, 0.1) 100%);
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    .total-price {
+        font-weight: 700;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem 1rem;
+    }
+
+    .summary-footer {
+        background: #f8f9fa;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Responsive */
+    @@media (max-width: 1280px) {
+        .price-summary-card {
+            margin-top: 2rem;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .summary-content {
+            padding: 1rem;
+        }
+
+        .summary-header {
+            padding: 1rem;
+        }
+    }
+</style>
+
+@code {
+    private decimal CalculateTotal()
+    {
+        return BookingState.BasePrice 
+               + BookingState.OptionalServicesTotal 
+               - BookingState.DiscountAmount;
+    }
+
+    // Método público para refrescar el componente desde el padre
+    public void Refresh()
+    {
+        StateHasChanged();
+    }
+}

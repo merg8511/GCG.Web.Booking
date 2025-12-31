@@ -1,0 +1,429 @@
+﻿@using GCG.Web.Booking.Models
+@using GCG.Web.Booking.Services
+@using GCG.Web.Booking.Services.Interfaces
+@inject BookingStateService BookingState
+@inject IAvailabilityService AvailabilityService
+
+<div class="step1-container">
+
+    <!-- Título del paso -->
+    <MudText Typo="Typo.h5" Class="step-title mb-4">
+        <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Class="mr-2" />
+        Selecciona tus Fechas y Huéspedes
+    </MudText>
+
+    <MudGrid Spacing="4">
+
+        <!-- Selector de fechas -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2" Class="date-card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" Class="mr-2" />
+                        ¿Cuándo nos visitas?
+                    </MudText>
+
+                    <MudDateRangePicker @bind-DateRange="selectedDates"
+                                        Label="Fechas de estadía"
+                                        Variant="Variant.Outlined"
+                                        Color="Color.Primary"
+                                        MinDate="@DateTime.Today"
+                                        MaxDate="@DateTime.Today.AddMonths(6)"
+                                        IsDateDisabledFunc="IsDateDisabled"
+                                        DateFormat="dd/MM/yyyy"
+                                        Class="mb-3" />
+
+                    @if (selectedDates?.Start != null && selectedDates?.End != null)
+                    {
+                        var nights = (selectedDates.End.Value - selectedDates.Start.Value).Days;
+                        <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Filled.Nightlight">
+                            @nights noche@(nights != 1 ? "s" : "") seleccionada@(nights != 1 ? "s" : "")
+                        </MudAlert>
+
+                        @if (nights < 1)
+                        {
+                            <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">
+                                La estadía mínima es de 1 noches
+                            </MudAlert>
+                        }
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Selector de huéspedes -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="2" Class="guests-card">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Class="mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small" Class="mr-2" />
+                        ¿Quiénes vienen?
+                    </MudText>
+
+                    <MudNumericField @bind-Value="adults"
+                                     Label="Adultos"
+                                     Variant="Variant.Outlined"
+                                     Min="1"
+                                     Max="10"
+                                     HelperText="Mayores de 18 años"
+                                     Class="mb-3" />
+
+                    <MudNumericField @bind-Value="children"
+                                     Label="Niños"
+                                     Variant="Variant.Outlined"
+                                     Min="0"
+                                     Max="10"
+                                     HelperText="Menores de 18 años"
+                                     Class="mb-3" />
+
+                    @if ((adults + children) > 12)
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true">
+                            El rancho tiene capacidad máxima para 12 personas
+                        </MudAlert>
+                    }
+                    else if (adults + children > 0)
+                    {
+                        <MudAlert Severity="Severity.Success" Dense="true" Icon="@Icons.Material.Filled.People">
+                            Total: @(adults + children) persona@((adults + children) != 1 ? "s" : "")
+                        </MudAlert>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Código promocional (opcional) -->
+        <MudItem xs="12">
+            <MudCard Elevation="2" Class="promo-card">
+                <MudCardContent>
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudIcon Icon="@Icons.Material.Filled.LocalOffer" Color="Color.Warning" />
+                        <MudTextField @bind-Value="promoCode"
+                                      Label="Código Promocional"
+                                      Variant="Variant.Outlined"
+                                      Placeholder="Ej: VERANO2025"
+                                      HelperText="Ingresa tu código para obtener descuento"
+                                      Class="flex-grow-1" />
+
+                        @if (!string.IsNullOrWhiteSpace(promoCode) && !promoValidated)
+                        {
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       OnClick="ValidatePromoCode"
+                                       Disabled="isValidatingPromo">
+                                @if (isValidatingPromo)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                }
+                                else
+                                {
+                                    <span>Validar</span>
+                                }
+                            </MudButton>
+                        }
+                    </MudStack>
+
+                    @if (promoValidated && promoValid)
+                    {
+                        <MudAlert Severity="Severity.Success" Dense="true" Class="mt-3" Icon="@Icons.Material.Filled.CheckCircle">
+                            ¡Código válido! Recibirás @promoDiscount% de descuento
+                        </MudAlert>
+                    }
+                    else if (promoValidated && !promoValid)
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3" Icon="@Icons.Material.Filled.Cancel">
+                            Código no válido o expirado
+                        </MudAlert>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+    </MudGrid>
+
+    <!-- Botón de verificar disponibilidad -->
+    <div class="action-buttons mt-6">
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Large"
+                   StartIcon="@Icons.Material.Filled.Search"
+                   OnClick="CheckAvailability"
+                   Disabled="@(!IsFormValid() || isCheckingAvailability)"
+                   FullWidth="true"
+                   Class="check-availability-btn">
+            @if (isCheckingAvailability)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Verificando disponibilidad...</span>
+            }
+            else
+            {
+                <span>Verificar Disponibilidad</span>
+            }
+        </MudButton>
+
+        <!-- Resultado de disponibilidad -->
+        @if (availabilityChecked)
+        {
+            <MudPaper Elevation="3" Class="availability-result mt-4 pa-4">
+                @if (availabilityResult?.IsAvailable == true)
+                {
+                    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.CheckCircle">
+                        <MudText Typo="Typo.h6" Class="mb-2">¡Excelente noticia!</MudText>
+                        <MudText Typo="Typo.body2">@availabilityResult.Message</MudText>
+                        <MudText Typo="Typo.body1" Class="mt-2">
+                            <strong>Precio estimado: $@availabilityResult.EstimatedPrice.ToString("N2")</strong>
+                        </MudText>
+                    </MudAlert>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               Size="Size.Large"
+                               Style="color:black !important;"
+                               EndIcon="@Icons.Material.Filled.ArrowForward"
+                               OnClick="ProceedToNextStep"
+                               FullWidth="true"
+                               Class="mt-3">
+                        Continuar con Servicios Opcionales
+                    </MudButton>
+                }
+                else
+                {
+                    <MudAlert Severity="Severity.Error" Icon="@Icons.Material.Filled.Cancel">
+                        <MudText Typo="Typo.h6" Class="mb-2">No disponible</MudText>
+                        <MudText Typo="Typo.body2">@availabilityResult?.Message</MudText>
+
+                        @if (availabilityResult?.UnavailableDates.Any() == true)
+                        {
+                            <MudText Typo="Typo.body2" Class="mt-2">
+                                <strong>Fechas ocupadas:</strong>
+                            </MudText>
+                            <MudChipSet T="string" Class="mt-2">
+                                @foreach (var date in availabilityResult.UnavailableDates.Take(5))
+                                {
+                                    <MudChip Size="Size.Small" Color="Color.Error">
+                                        @date.ToString("dd/MM/yyyy")
+                                    </MudChip>
+                                }
+                            </MudChipSet>
+                        }
+                    </MudAlert>
+                }
+            </MudPaper>
+        }
+    </div>
+
+</div>
+
+<style>
+    .step1-container {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .step-title {
+        color: #023047;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    .date-card,
+    .guests-card,
+    .promo-card {
+        height: 100%;
+        border-radius: 12px;
+        transition: box-shadow 0.3s ease;
+    }
+
+        .date-card:hover,
+        .guests-card:hover,
+        .promo-card:hover {
+            box-shadow: 0 8px 20px rgba(33, 158, 188, 0.15) !important;
+        }
+
+    .check-availability-btn {
+        box-shadow: 0 4px 12px rgba(33, 158, 188, 0.3);
+        transition: all 0.3s ease;
+    }
+
+        .check-availability-btn:hover:not(:disabled) {
+            box-shadow: 0 6px 20px rgba(33, 158, 188, 0.4);
+            transform: translateY(-2px);
+        }
+
+    .availability-result {
+        border-radius: 12px;
+        animation: slideDown 0.3s ease-in-out;
+    }
+
+    @@keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<bool> OnValidationChanged { get; set; }
+    [Parameter] public EventCallback OnProceedNext { get; set; } 
+
+    private DateRange? selectedDates;
+    private int adults = 2;
+    private int children = 0;
+    private string promoCode = "";
+
+    private bool isCheckingAvailability = false;
+    private bool availabilityChecked = false;
+    private AvailabilityResult? availabilityResult;
+
+    private bool isValidatingPromo = false;
+    private bool promoValidated = false;
+    private bool promoValid = false;
+    private decimal promoDiscount = 0;
+
+    // Fechas bloqueadas mock
+    private List<DateTime> unavailableDates = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargar datos desde BookingState si existen
+        if (BookingState.SelectedDates != null)
+        {
+            selectedDates = BookingState.SelectedDates;
+            adults = BookingState.Adults;
+            children = BookingState.Children;
+            promoCode = BookingState.PromoCode ?? "";
+        }
+
+        // Obtener fechas no disponibles
+        unavailableDates = await AvailabilityService.GetUnavailableDatesAsync(
+            DateTime.Today,
+            DateTime.Today.AddMonths(6));
+
+        await base.OnInitializedAsync();
+    }
+
+    private bool IsDateDisabled(DateTime date)
+    {
+        return unavailableDates.Any(d => d.Date == date.Date);
+    }
+
+    private bool IsFormValid()
+    {
+        return selectedDates?.Start != null
+               && selectedDates?.End != null
+               && adults > 0
+               && (adults + children) <= 12
+               && (selectedDates.End.Value - selectedDates.Start.Value).Days >= 1;
+    }
+
+    private async Task CheckAvailability()
+    {
+        if (!IsFormValid()) return;
+
+        isCheckingAvailability = true;
+        availabilityChecked = false;
+        StateHasChanged();
+
+        try
+        {
+            availabilityResult = await AvailabilityService.CheckAvailabilityAsync(
+                selectedDates!.Start!.Value,
+                selectedDates!.End!.Value);
+
+            availabilityChecked = true;
+
+            // Actualizar BookingState
+            BookingState.SelectedDates = selectedDates;
+            BookingState.Adults = adults;
+            BookingState.Children = children;
+            BookingState.PromoCode = string.IsNullOrWhiteSpace(promoCode) ? null : promoCode;
+            BookingState.IsAvailable = availabilityResult.IsAvailable;
+            BookingState.UnavailabilityReason = availabilityResult.Message;
+            BookingState.BasePrice = availabilityResult.EstimatedPrice;
+
+            await OnValidationChanged.InvokeAsync(availabilityResult.IsAvailable);
+            
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Error al verificar disponibilidad: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isCheckingAvailability = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ValidatePromoCode()
+    {
+        if (string.IsNullOrWhiteSpace(promoCode)) return;
+
+        isValidatingPromo = true;
+        promoValidated = false;
+        StateHasChanged();
+
+        await Task.Delay(800); // Simular llamada API
+
+        try
+        {
+            var (isValid, discount) = await AvailabilityService.ValidatePromoCodeAsync(promoCode);
+
+            promoValid = isValid;
+            promoDiscount = discount;
+            promoValidated = true;
+
+            if (isValid)
+            {
+                BookingState.PromoCode = promoCode;
+                _snackbar.Add($"¡Código válido! Obtendrás {discount}% de descuento", Severity.Success);
+            }
+            else
+            {
+                _snackbar.Add("Código promocional no válido", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Error al validar código: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isValidatingPromo = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProceedToNextStep() 
+    {
+        if (availabilityResult?.IsAvailable != true)
+            return;
+
+        await OnProceedNext.InvokeAsync();
+    }
+
+    // Método público para validación externa
+    public bool Validate()
+    {
+        return IsFormValid() && availabilityResult?.IsAvailable == true;
+    }
+}

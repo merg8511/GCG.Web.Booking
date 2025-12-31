@@ -1,0 +1,507 @@
+﻿@using GCG.Web.Booking.Models
+@using GCG.Web.Booking.Services
+@using GCG.Web.Booking.Services.Interfaces
+@inject BookingStateService BookingState
+@inject IBookingService BookingService
+
+<div class="step2-container">
+    
+    <!-- Título del paso -->
+    <MudText Typo="Typo.h5" Class="step-title mb-2">
+        <MudIcon Icon="@Icons.Material.Filled.AddCircle" Class="mr-2" />
+        Personaliza tu Experiencia
+    </MudText>
+
+    <MudText Typo="Typo.body1" Color="Color.Default" Class="mb-4">
+        Agrega servicios opcionales para hacer tu estadía aún más especial
+    </MudText>
+
+    @if (isLoading)
+    {
+        <!-- Estado de carga -->
+        <div class="loading-state">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.body1" Class="mt-3">Cargando servicios disponibles...</MudText>
+        </div>
+    }
+    else if (optionalServices.Any())
+    {
+        <!-- Grid de servicios -->
+        <MudGrid Spacing="3">
+            @foreach (var service in optionalServices)
+            {
+                var isSelected = selectedServices.Contains(service.Id);
+                var nights = BookingState.GetNumberOfNights();
+                var totalPrice = service.PricePerDay * nights;
+
+                <MudItem xs="12" sm="6" data-aos="fade-up">
+                    <MudCard Elevation="2" 
+                            Class="@($"service-card {(isSelected ? "selected" : "")}")"
+                            @onclick="() => ToggleService(service.Id)">
+                        
+                        <!-- Badge de popular -->
+                        @if (service.IsPopular)
+                        {
+                            <div class="popular-badge">
+                                <MudChip T="string" Size="Size.Small"
+                                        Color="Color.Warning" 
+                                        Icon="@Icons.Material.Filled.Star">
+                                    Popular
+                                </MudChip>
+                            </div>
+                        }
+
+                        <!-- Checkbox de selección -->
+                        <div class="selection-indicator">
+                            <MudCheckBox @bind-Value="isSelected" 
+                                        Color="Color.Primary" 
+                                        Size="Size.Large"
+                                        ReadOnly="true" />
+                        </div>
+
+                        <!-- Imagen del servicio -->
+                        <MudCardMedia Image="@service.ImageUrl" 
+                                     Height="180" 
+                                     Class="service-image" />
+
+                        <MudCardContent>
+                            <!-- Encabezado con ícono -->
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                                <MudIcon Icon="@service.Icon" Color="Color.Primary" Size="Size.Medium" />
+                                <MudText Typo="Typo.h6" Class="service-name">
+                                    @service.Name
+                                </MudText>
+                            </MudStack>
+
+                            <!-- Descripción -->
+                            <MudText Typo="Typo.body2" Color="Color.Default" Class="service-description">
+                                @service.Description
+                            </MudText>
+
+                            <MudDivider Class="my-3" />
+
+                            <!-- Precio -->
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.End">
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Default">
+                                        $@service.PricePerDay.ToString("N2") / día
+                                    </MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Default">
+                                        × @nights noche@(nights != 1 ? "s" : "")
+                                    </MudText>
+                                </div>
+                                <MudText Typo="Typo.h6" Color="Color.Primary" Class="service-total">
+                                    $@totalPrice.ToString("N2")
+                                </MudText>
+                            </MudStack>
+                        </MudCardContent>
+
+                        <!-- Indicador visual de selección -->
+                        @if (isSelected)
+                        {
+                            <div class="selected-overlay">
+                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" 
+                                        Color="Color.Success" 
+                                        Size="Size.Large" />
+                            </div>
+                        }
+
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+
+        <!-- Resumen de servicios seleccionados -->
+        @if (selectedServices.Any())
+        {
+            <MudPaper Elevation="3" Class="selected-summary mt-6 pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="mr-2" />
+                    Servicios Seleccionados (@selectedServices.Count)
+                </MudText>
+
+                <MudStack Spacing="2">
+                    @foreach (var serviceId in selectedServices)
+                    {
+                        var service = optionalServices.FirstOrDefault(s => s.Id == serviceId);
+                        if (service != null)
+                        {
+                            var nights = BookingState.GetNumberOfNights();
+                            var total = service.PricePerDay * nights;
+
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@service.Icon" Size="Size.Small" Color="Color.Primary" />
+                                    <div>
+                                        <MudText Typo="Typo.body1">@service.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Default">
+                                            $@service.PricePerDay.ToString("N2") × @nights noche@(nights != 1 ? "s" : "")
+                                        </MudText>
+                                    </div>
+                                </MudStack>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudText Typo="Typo.body1"><strong>$@total.ToString("N2")</strong></MudText>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                                  Size="Size.Small"
+                                                  Color="Color.Error"
+                                                  OnClick="() => ToggleService(serviceId)" />
+                                </MudStack>
+                            </MudStack>
+                        }
+                    }
+
+                    <MudDivider Class="my-2" />
+
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h6">Total Servicios Opcionales</MudText>
+                        <MudText Typo="Typo.h6" Color="Color.Primary">
+                            $@CalculateOptionalServicesTotal().ToString("N2")
+                        </MudText>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4" Icon="@Icons.Material.Filled.Info">
+                No has seleccionado servicios opcionales. Puedes continuar sin agregar extras o elegir algunos para mejorar tu experiencia.
+            </MudAlert>
+        }
+
+        <!-- Botones de acción -->
+        <div class="action-buttons mt-6">
+            <MudStack Row="true" Spacing="3" Justify="Justify.SpaceBetween">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Default"
+                           Size="Size.Large"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           OnClick="ReturnPreviousStep">
+                    Volver
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           EndIcon="@Icons.Material.Filled.ArrowForward"
+                           OnClick="ProceedToSummary"
+                           Disabled="isSaving">
+                    @if (isSaving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Calculando...</span>
+                    }
+                    else
+                    {
+                        <span>Continuar al Resumen</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </div>
+    }
+    else
+    {
+        <!-- Estado sin servicios -->
+        <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.Warning">
+            No hay servicios opcionales disponibles en este momento.
+        </MudAlert>
+
+        <div class="action-buttons mt-4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Large"
+                       EndIcon="@Icons.Material.Filled.ArrowForward"
+                       OnClick="ProceedToSummary">
+                Continuar al Resumen
+            </MudButton>
+        </div>
+    }
+
+</div>
+
+<style>
+    .step2-container {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-title {
+        color: #023047;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Estado de carga */
+    .loading-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    /* Cards de servicios */
+    .service-card {
+        position: relative;
+        height: 100%;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        overflow: visible;
+    }
+
+    .service-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 28px rgba(33, 158, 188, 0.25) !important;
+    }
+
+    .service-card.selected {
+        border-color: #2a9d8f;
+        box-shadow: 0 8px 20px rgba(42, 157, 143, 0.3) !important;
+    }
+
+    /* Badge popular */
+    .popular-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 2;
+    }
+
+    /* Checkbox de selección */
+    .selection-indicator {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 2;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Imagen */
+    .service-image {
+        transition: transform 0.3s ease;
+    }
+
+    .service-card:hover .service-image {
+        transform: scale(1.05);
+    }
+
+    /* Contenido */
+    .service-name {
+        font-weight: 600;
+        color: #023047;
+        margin: 0;
+    }
+
+    .service-description {
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .service-total {
+        font-weight: 700;
+    }
+
+    /* Overlay de selección */
+    .selected-overlay {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        background: white;
+        border-radius: 50%;
+        padding: 4px;
+        box-shadow: 0 4px 12px rgba(42, 157, 143, 0.4);
+        animation: popIn 0.3s ease-in-out;
+    }
+
+    @@keyframes popIn {
+        0% { transform: scale(0); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+
+    /* Resumen de seleccionados */
+    .selected-summary {
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.05) 0%, rgba(42, 157, 143, 0.05) 100%);
+        border-left: 4px solid #2a9d8f;
+        animation: slideUp 0.3s ease-in-out;
+    }
+
+    @@keyframes slideUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Botones de acción */
+    .action-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    /* Responsive */
+    @@media (max-width: 600px) {
+        .service-card {
+            margin-bottom: 1rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-buttons .mud-button {
+            width: 100%;
+        }
+
+        .selected-summary {
+            padding: 1rem !important;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnProceedNext { get; set; }
+    [Parameter] public EventCallback OnReturnPreviousStep { get; set; }
+
+    private List<OptionalBookingService> optionalServices = new();
+    private List<string> selectedServices = new();
+    private bool isLoading = true;
+    private bool isSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Cargar servicios opcionales disponibles
+        try
+        {
+            optionalServices = await BookingService.GetOptionalServicesAsync();
+            
+            // Cargar servicios previamente seleccionados si existen
+            if (BookingState.SelectedOptionalServices.Any())
+            {
+                selectedServices = new List<string>(BookingState.SelectedOptionalServices);
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Error al cargar servicios: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    private void ToggleService(string serviceId)
+    {
+        if (selectedServices.Contains(serviceId))
+        {
+            selectedServices.Remove(serviceId);
+            _snackbar.Add("Servicio eliminado", Severity.Info);
+        }
+        else
+        {
+            selectedServices.Add(serviceId);
+            var service = optionalServices.FirstOrDefault(s => s.Id == serviceId);
+            _snackbar.Add($"{service?.Name} agregado", Severity.Success);
+        }
+
+        // Actualizar el estado y recalcular precio
+        UpdateBookingState();
+        StateHasChanged();
+    }
+
+    private decimal CalculateOptionalServicesTotal()
+    {
+        var nights = BookingState.GetNumberOfNights();
+        decimal total = 0;
+
+        foreach (var serviceId in selectedServices)
+        {
+            var service = optionalServices.FirstOrDefault(s => s.Id == serviceId);
+            if (service != null)
+            {
+                total += service.PricePerDay * nights;
+            }
+        }
+
+        return total;
+    }
+
+    private void UpdateBookingState()
+    {
+        // Actualizar servicios seleccionados
+        BookingState.SelectedOptionalServices = new List<string>(selectedServices);
+        
+        // Actualizar total de servicios opcionales
+        BookingState.OptionalServicesTotal = CalculateOptionalServicesTotal();
+
+        // Recalcular precio total
+        BookingState.TotalPrice = BookingState.BasePrice 
+                                 + BookingState.OptionalServicesTotal 
+                                 - BookingState.DiscountAmount;
+    }
+
+    private async Task ProceedToSummary()
+    {
+        isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            // Actualizar estado final antes de avanzar
+            UpdateBookingState();
+
+            // Calcular desglose completo de precios
+            var priceBreakdown = await BookingService.CalculatePriceBreakdownAsync(
+                BookingState.SelectedDates!.Start!.Value,
+                BookingState.SelectedDates!.End!.Value,
+                selectedServices,
+                BookingState.PromoCode
+            );
+
+            // Actualizar precios en el estado
+            BookingState.BasePrice = priceBreakdown.BasePrice;
+            BookingState.OptionalServicesTotal = priceBreakdown.OptionalServicesTotal;
+            BookingState.DiscountAmount = priceBreakdown.DiscountAmount;
+            BookingState.TotalPrice = priceBreakdown.Total;
+
+            await OnProceedNext.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Error al calcular precios: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProceedToNextStep()
+    {
+        await OnProceedNext.InvokeAsync();
+    }
+
+    private async Task ReturnPreviousStep()
+    {
+        await OnReturnPreviousStep.InvokeAsync();
+    }
+
+    // Método público para validación externa
+    public bool Validate()
+    {
+        // Este paso siempre es válido ya que los servicios opcionales son... opcionales
+        return true;
+    }
+}

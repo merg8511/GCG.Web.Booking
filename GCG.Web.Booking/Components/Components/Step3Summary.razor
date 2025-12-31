@@ -1,0 +1,618 @@
+﻿@using GCG.Web.Booking.Models
+@using GCG.Web.Booking.Services
+@using GCG.Web.Booking.Services.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@inject BookingStateService BookingState
+@inject IBookingService BookingService
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<div class="step3-container">
+    
+    <!-- Título del paso -->
+    <MudText Typo="Typo.h5" Class="step-title mb-2">
+        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Class="mr-2" />
+        Confirma tu Reserva
+    </MudText>
+
+    <MudText Typo="Typo.body1" Color="Color.Default" Class="mb-4">
+        Revisa todos los detalles antes de confirmar tu estadía
+    </MudText>
+
+    @if (!isAuthenticated)
+    {
+        <!-- Alerta de autenticación requerida -->
+        <MudAlert Severity="Severity.Warning" 
+                 Icon="@Icons.Material.Filled.Lock" 
+                 Class="mb-4"
+                 Elevation="2">
+            <MudText Typo="Typo.body1" Class="mb-2">
+                <strong>Inicia sesión para continuar</strong>
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mb-3">
+                Necesitas estar autenticado para completar tu reserva. Esto nos permite enviarte la confirmación y gestionar tu estadía.
+            </MudText>
+            <MudButton Variant="Variant.Filled"
+                      Color="Color.Primary"
+                      StartIcon="@Icons.Material.Filled.Login"
+                      OnClick="RedirectToLogin">
+                Iniciar Sesión / Registrarse
+            </MudButton>
+        </MudAlert>
+    }
+
+    <MudGrid Spacing="4">
+        
+        <!-- Resumen de fechas y huéspedes -->
+        <MudItem xs="12">
+            <MudCard Elevation="3" Class="summary-card">
+                <MudCardHeader Class="card-header-dates">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="header-title">
+                            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Class="mr-2" />
+                            Detalles de la Estadía
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="detail-item">
+                                <MudText Typo="Typo.caption" Color="Color.Default">Check-in</MudText>
+                                <MudText Typo="Typo.h6" Class="detail-value">
+                                    @BookingState.SelectedDates?.Start?.ToString("dd MMM yyyy")
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Default">A partir de las 3:00 PM</MudText>
+                            </div>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="detail-item">
+                                <MudText Typo="Typo.caption" Color="Color.Default">Check-out</MudText>
+                                <MudText Typo="Typo.h6" Class="detail-value">
+                                    @BookingState.SelectedDates?.End?.ToString("dd MMM yyyy")
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Default">Hasta las 11:00 AM</MudText>
+                            </div>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="detail-item">
+                                <MudText Typo="Typo.caption" Color="Color.Default">Duración</MudText>
+                                <MudText Typo="Typo.h6" Class="detail-value">
+                                    @BookingState.GetNumberOfNights() noche@(BookingState.GetNumberOfNights() != 1 ? "s" : "")
+                                </MudText>
+                            </div>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <div class="detail-item">
+                                <MudText Typo="Typo.caption" Color="Color.Default">Huéspedes</MudText>
+                                <MudText Typo="Typo.h6" Class="detail-value">
+                                    @BookingState.GetTotalGuests() persona@(BookingState.GetTotalGuests() != 1 ? "s" : "")
+                                </MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Default">
+                                    @BookingState.Adults adulto@(BookingState.Adults != 1 ? "s" : ""), @BookingState.Children niño@(BookingState.Children != 1 ? "s" : "")
+                                </MudText>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Servicios incluidos -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="summary-card">
+                <MudCardHeader Class="card-header-included">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="header-title">
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Class="mr-2" />
+                            Incluido en tu Reserva
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList  T="string" Dense="true" Class="included-list">
+                        <MudListItem Icon="@Icons.Material.Filled.Home">
+                            <MudText Typo="Typo.body2">4 habitaciones con aire acondicionado</MudText>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Pool">
+                            <MudText Typo="Typo.body2">Piscina privada</MudText>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.BeachAccess">
+                            <MudText Typo="Typo.body2">Acceso a playa privada</MudText>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Kitchen">
+                            <MudText Typo="Typo.body2">Cocina totalmente equipada</MudText>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Wifi">
+                            <MudText Typo="Typo.body2">WiFi de alta velocidad</MudText>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LocalParking">
+                            <MudText Typo="Typo.body2">Estacionamiento privado</MudText>
+                        </MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Deck">
+                            <MudText Typo="Typo.body2">Área de BBQ con rancho</MudText>
+                        </MudListItem>
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Servicios opcionales seleccionados -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3" Class="summary-card">
+                <MudCardHeader Class="card-header-optional">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="header-title">
+                            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Class="mr-2" />
+                            Servicios Adicionales
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @if (BookingState.SelectedOptionalServices.Any())
+                    {
+                        <MudList T="string" Dense="true" Class="optional-list">
+                            @foreach (var serviceId in BookingState.SelectedOptionalServices)
+                            {
+                                var service = optionalServices.FirstOrDefault(s => s.Id == serviceId);
+                                if (service != null)
+                                {
+                                    var nights = BookingState.GetNumberOfNights();
+                                    var total = service.PricePerDay * nights;
+                                    
+                                    <MudListItem Icon="@service.Icon">
+                                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="w-100">
+                                            <div>
+                                                <MudText Typo="Typo.body2"><strong>@service.Name</strong></MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Default">
+                                                    $@service.PricePerDay.ToString("N2") × @nights noche@(nights != 1 ? "s" : "")
+                                                </MudText>
+                                            </div>
+                                            <MudText Typo="Typo.body1" Color="Color.Primary">
+                                                <strong>$@total.ToString("N2")</strong>
+                                            </MudText>
+                                        </MudStack>
+                                    </MudListItem>
+                                }
+                            }
+                        </MudList>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Filled.Info">
+                            No has seleccionado servicios adicionales
+                        </MudAlert>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Desglose de precios -->
+        <MudItem xs="12">
+            <MudCard Elevation="3" Class="price-breakdown-card">
+                <MudCardHeader Class="card-header-price">
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="header-title">
+                            <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-2" />
+                            Desglose de Precios
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <!-- Base price -->
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.body1">
+                                $250.00 × @BookingState.GetNumberOfNights() noche@(BookingState.GetNumberOfNights() != 1 ? "s" : "")
+                            </MudText>
+                            <MudText Typo="Typo.body1">
+                                <strong>$@BookingState.BasePrice.ToString("N2")</strong>
+                            </MudText>
+                        </MudStack>
+
+                        <!-- Optional services -->
+                        @if (BookingState.OptionalServicesTotal > 0)
+                        {
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.body1">Servicios opcionales</MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>$@BookingState.OptionalServicesTotal.ToString("N2")</strong>
+                                </MudText>
+                            </MudStack>
+                        }
+
+                        <MudDivider />
+
+                        <!-- Subtotal -->
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <MudText Typo="Typo.body1">Subtotal</MudText>
+                            <MudText Typo="Typo.body1">
+                                <strong>$@(BookingState.BasePrice + BookingState.OptionalServicesTotal).ToString("N2")</strong>
+                            </MudText>
+                        </MudStack>
+
+                        <!-- Discount -->
+                        @if (BookingState.DiscountAmount > 0)
+                        {
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudText Typo="Typo.body1" Color="Color.Success">
+                                    <MudIcon Icon="@Icons.Material.Filled.LocalOffer" Size="Size.Small" Class="mr-1" />
+                                    Descuento (@BookingState.PromoCode)
+                                </MudText>
+                                <MudText Typo="Typo.body1" Color="Color.Success">
+                                    <strong>-$@BookingState.DiscountAmount.ToString("N2")</strong>
+                                </MudText>
+                            </MudStack>
+                        }
+
+                        <MudDivider Class="my-2" DividerType="DividerType.Middle" />
+
+                        <!-- Total -->
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="total-section">
+                            <MudText Typo="Typo.h5">Total</MudText>
+                            <MudText Typo="Typo.h4" Color="Color.Primary" Class="total-amount">
+                                $@BookingState.TotalPrice.ToString("N2")
+                            </MudText>
+                        </MudStack>
+
+                        <MudDivider Class="my-2" />
+
+                        <!-- Payment info -->
+                        <MudAlert Severity="Severity.Info" Dense="true" Icon="@Icons.Material.Filled.Info">
+                            <MudStack Spacing="1">
+                                <MudText Typo="Typo.body2">
+                                    <strong>Depósito requerido ahora:</strong> $@((BookingState.TotalPrice * 0.5m).ToString("N2")) (50%)
+                                </MudText>
+                                <MudText Typo="Typo.body2">
+                                    <strong>Saldo restante:</strong> $@((BookingState.TotalPrice * 0.5m).ToString("N2")) (a pagar al llegar)
+                                </MudText>
+                            </MudStack>
+                        </MudAlert>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Información de contacto (si está autenticado) -->
+        @if (isAuthenticated)
+        {
+            <MudItem xs="12">
+                <MudCard Elevation="3" Class="summary-card">
+                    <MudCardHeader Class="card-header-contact">
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" Class="header-title">
+                                <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2" />
+                                Información de Contacto
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid Spacing="3">
+                            <MudItem xs="12" md="4">
+                                <MudTextField @bind-Value="guestName"
+                                            Label="Nombre completo"
+                                            Variant="Variant.Outlined"
+                                            Required="true"
+                                            HelperText="Como aparece en tu identificación" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField @bind-Value="guestEmail"
+                                            Label="Email"
+                                            Variant="Variant.Outlined"
+                                            InputType="InputType.Email"
+                                            Required="true"
+                                            HelperText="Recibirás la confirmación aquí" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField @bind-Value="guestPhone"
+                                            Label="Teléfono"
+                                            Variant="Variant.Outlined"
+                                            InputType="InputType.Telephone"
+                                            Required="true"
+                                            HelperText="Para contactarte si es necesario" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="specialRequests"
+                                            Label="Solicitudes especiales (opcional)"
+                                            Variant="Variant.Outlined"
+                                            Lines="3"
+                                            HelperText="Alergias, preferencias dietéticas, hora estimada de llegada, etc." />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Términos y condiciones -->
+            <MudItem xs="12">
+                <MudCard Elevation="3" Class="terms-card">
+                    <MudCardContent>
+                        <MudCheckBox @bind-Value="acceptedTerms" 
+                                    Color="Color.Primary" 
+                                    Dense="true">
+                            <MudText Typo="Typo.body2">
+                                Acepto los <MudLink Href="/terms" Target="_blank">términos y condiciones</MudLink> y la 
+                                <MudLink Href="/privacy" Target="_blank">política de privacidad</MudLink>
+                            </MudText>
+                        </MudCheckBox>
+
+                        <MudAlert Severity="Severity.Warning" Dense="true" Icon="@Icons.Material.Filled.Info" Class="mt-3">
+                            <MudText Typo="Typo.caption">
+                                <strong>Política de cancelación:</strong> Cancelación gratuita hasta 30 días antes del check-in. 
+                                Entre 15-30 días: reembolso del 50%. Menos de 15 días: sin reembolso.
+                            </MudText>
+                        </MudAlert>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+
+    </MudGrid>
+
+    <!-- Botones de acción -->
+    <div class="action-buttons mt-6">
+        <MudStack Row="true" Spacing="3" Justify="Justify.SpaceBetween">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="ReturnPreviousStep">
+                Volver a Servicios
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Success"
+                       Size="Size.Large"
+                       EndIcon="@Icons.Material.Filled.Payment"
+                       OnClick="ConfirmBooking"
+                       Disabled="@(!CanConfirm() || isProcessing)">
+                @if (isProcessing)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Procesando...</span>
+                }
+                else
+                {
+                    <span>Confirmar y Pagar</span>
+                }
+            </MudButton>
+        </MudStack>
+    </div>
+
+</div>
+
+<style>
+    .step3-container {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .step-title {
+        color: #023047;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Cards */
+    .summary-card,
+    .price-breakdown-card,
+    .terms-card {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    /* Headers personalizados */
+    .card-header-dates {
+        background: linear-gradient(135deg, #219ebc 0%, #023047 100%);
+        color: white;
+    }
+
+    .card-header-included {
+        background: linear-gradient(135deg, #2a9d8f 0%, #1a7a6d 100%);
+        color: white;
+    }
+
+    .card-header-optional {
+        background: linear-gradient(135deg, #ffb703 0%, #fb8500 100%);
+        color: white;
+    }
+
+    .card-header-price {
+        background: linear-gradient(135deg, #219ebc 0%, #2a9d8f 100%);
+        color: white;
+    }
+
+    .card-header-contact {
+        background: linear-gradient(135deg, #023047 0%, #219ebc 100%);
+        color: white;
+    }
+
+    .header-title {
+        color: white;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Detail items */
+    .detail-item {
+        text-align: center;
+        padding: 1rem;
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.05) 0%, rgba(255, 183, 3, 0.05) 100%);
+        border-radius: 12px;
+    }
+
+    .detail-value {
+        color: #219ebc;
+        font-weight: 700;
+        margin: 0.5rem 0;
+    }
+
+    /* Lists */
+    .included-list .mud-list-item,
+    .optional-list .mud-list-item {
+        padding: 0.75rem 0;
+    }
+
+    /* Price breakdown */
+    .total-section {
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.1) 0%, rgba(42, 157, 143, 0.1) 100%);
+        padding: 1rem;
+        border-radius: 12px;
+    }
+
+    .total-amount {
+        font-weight: 700;
+    }
+
+    /* Responsive */
+    @@media (max-width: 960px) {
+        .detail-item {
+            margin-bottom: 1rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+        }
+
+        .action-buttons .mud-button {
+            width: 100%;
+        }
+    }
+</style>
+
+@code {
+    [Parameter] public EventCallback<BookingSummary> OnConfirm { get; set; }
+    [Parameter] public EventCallback OnReturnPreviousStep { get; set; }
+
+    private bool isAuthenticated = false;
+    private bool isProcessing = false;
+    private bool acceptedTerms = false;
+
+    private string guestName = "";
+    private string guestEmail = "";
+    private string guestPhone = "";
+    private string specialRequests = "";
+
+    private List<OptionalBookingService> optionalServices = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar autenticación
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+
+        if (isAuthenticated)
+        {
+            // Auto-llenar datos del usuario autenticado
+            guestName = user.FindFirst("name")?.Value 
+                       ?? $"{user.FindFirst("given_name")?.Value} {user.FindFirst("family_name")?.Value}".Trim()
+                       ?? "";
+            guestEmail = user.FindFirst("email")?.Value ?? "";
+            guestPhone = user.FindFirst("phone_number")?.Value ?? "";
+        }
+
+        // Cargar servicios para mostrar nombres
+        optionalServices = await BookingService.GetOptionalServicesAsync();
+
+        await base.OnInitializedAsync();
+    }
+
+    private bool CanConfirm()
+    {
+        if (!isAuthenticated) return false;
+        if (!acceptedTerms) return false;
+        if (string.IsNullOrWhiteSpace(guestName)) return false;
+        if (string.IsNullOrWhiteSpace(guestEmail)) return false;
+        if (string.IsNullOrWhiteSpace(guestPhone)) return false;
+
+        return true;
+    }
+
+    private async Task ConfirmBooking()
+    {
+        if (!CanConfirm()) return;
+
+        isProcessing = true;
+        StateHasChanged();
+
+        try
+        {
+            // Crear request de reserva
+            var request = new BookingRequest
+            {
+                CheckIn = BookingState.SelectedDates!.Start!.Value,
+                CheckOut = BookingState.SelectedDates!.End!.Value,
+                Adults = BookingState.Adults,
+                Children = BookingState.Children,
+                PromoCode = BookingState.PromoCode,
+                OptionalServiceIds = BookingState.SelectedOptionalServices,
+                GuestName = guestName,
+                GuestEmail = guestEmail,
+                GuestPhone = guestPhone,
+                SpecialRequests = specialRequests
+            };
+
+            // Crear reserva pendiente en el backend
+            var result = await BookingService.CreatePendingBookingAsync(request);
+
+            if (result.Success)
+            {
+                // Guardar ID de reserva pendiente
+                BookingState.PendingBookingId = result.BookingId;
+
+                // Obtener resumen completo
+                var summary = await BookingService.GetBookingSummaryAsync(result.BookingId!);
+
+                if (summary != null)
+                {
+                    _snackbar.Add("¡Reserva creada exitosamente!", Severity.Success);
+
+                    // Invocar callback al padre con el resumen
+                    await OnConfirm.InvokeAsync(summary);
+                }
+                else
+                {
+                    _snackbar.Add("Error al obtener resumen de la reserva", Severity.Error);
+                }
+            }
+            else
+            {
+                _snackbar.Add(result.ErrorMessage ?? "Error al crear la reserva", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RedirectToLogin()
+    {
+        // Guardar el estado actual antes de redirigir
+        var returnUrl = Uri.EscapeDataString("/booking");
+        Nav.NavigateTo($"/login?returnUrl={returnUrl}", forceLoad: true);
+    }
+
+    private async Task ReturnPreviousStep()
+    {
+        await OnReturnPreviousStep.InvokeAsync();
+    }
+
+    // Método público para validación externa
+    public bool Validate()
+    {
+        return CanConfirm();
+    }
+}

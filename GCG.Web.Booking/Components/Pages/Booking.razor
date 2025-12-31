@@ -1,0 +1,358 @@
+﻿@page "/booking"
+@using GCG.Web.Booking.Models
+@using GCG.Web.Booking.Services
+@using GCG.Web.Booking.Services.Interfaces
+@using Microsoft.AspNetCore.Components.Authorization
+@using GCG.Web.Booking.Components.Components
+@inject BookingStateService BookingState
+@inject IAvailabilityService AvailabilityService
+@inject IBookingService BookingService
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JS
+
+<PageTitle>Reservar - Refugio del Sol</PageTitle>
+
+<section class="booking-page">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-20">
+
+        <!-- Grid principal: Contenido + Resumen lateral -->
+        <MudGrid Class="mt-6">
+            <!-- Columna principal: Steps -->
+            <MudItem xs="12" md="8" lg="8">
+                <div class="step-content" data-aos="fade-up">
+                    <!-- Header con progreso -->
+                    <div class="booking-header" data-aos="fade-down">
+                        <MudText Typo="Typo.h3" Align="Align.Center" Class="page-title">
+                            Completa tu Reserva
+                        </MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Center" Class="page-subtitle">
+                            Solo unos pasos más para asegurar tu experiencia en el paraíso
+                        </MudText>
+
+                        <!-- Stepper de progreso -->
+                        <div class="progress-stepper">
+                            <MudStepper @ref="stepper"
+                                        NonLinear
+                                        CurrentStepColor="Color.Primary"
+                                        Class="booking-stepper">
+                                <ActionContent Context="stepper">
+                                    @* Intencionalmente vacío: oculta Previous/Next/Skip por defecto *@
+                                </ActionContent>
+                                <ChildContent>
+                                    <MudStep Title="Fechas y Huéspedes">
+                                        <ChildContent>
+                                            <Step1DateSelection @ref="step1Component"
+                                                                OnValidationChanged="HandleStep1Validation"
+                                                                OnProceedNext="GoToNextStep" />
+                                        </ChildContent>
+
+                                    </MudStep>
+
+                                    <MudStep Title="Servicios Opcionales">
+                                        <ChildContent>
+                                            <Step2ServicesSelection @ref="step2Component"
+                                                                    OnProceedNext="GoToNextStep"
+                                                                    OnReturnPreviousStep="ReturnPreviousStep" />
+                                        </ChildContent>
+                                    </MudStep>
+
+                                    <MudStep Title="Resumen y Confirmación">
+                                        <ChildContent>
+                                            <Step3Summary @ref="step3Component"
+                                                          OnConfirm="HandleBookingConfirmation"
+                                                          OnReturnPreviousStep="ReturnPreviousStep" />
+                                        </ChildContent>
+                                    </MudStep>
+                                </ChildContent>
+                            </MudStepper>
+                        </div>
+                    </div>
+                </div>
+            </MudItem>
+
+            <!-- Columna lateral: Resumen de precio (sticky en desktop) -->
+            <MudItem xs="12" md="4" lg="4">
+                <div class="price-summary-container" data-aos="fade-up" data-aos-delay="100">
+                    <PriceSummaryCard @ref="priceSummaryCard" />
+                </div>
+            </MudItem>
+
+        </MudGrid>
+
+        <!-- Modal de confirmación exitosa -->
+        @if (showSuccessDialog && confirmedBooking != null)
+        {
+            <MudDialog @bind-IsVisible="showSuccessDialog"
+                       Options="successDialogOptions"
+                       Class="booking-success-dialog">
+                <DialogContent>
+                    <div class="success-content">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                                 Color="Color.Success"
+                                 Size="Size.Large"
+                                 Class="success-icon" />
+
+                        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-2">
+                            ¡Reserva Confirmada!
+                        </MudText>
+
+                        <MudText Typo="Typo.body1" Align="Align.Center" Color="Color.Default" Class="mb-4">
+                            Tu reserva ha sido creada exitosamente
+                        </MudText>
+
+                        <MudPaper Elevation="0" Class="confirmation-details pa-4 mb-4">
+                            <MudStack Spacing="2">
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudText Typo="Typo.body2" Color="Color.Default">Código de confirmación:</MudText>
+                                    <MudText Typo="Typo.body1"><strong>@confirmedBooking.ConfirmationCode</strong></MudText>
+                                </MudStack>
+                                <MudDivider />
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudText Typo="Typo.body2" Color="Color.Default">Check-in:</MudText>
+                                    <MudText Typo="Typo.body1">@confirmedBooking.CheckIn.ToString("dd MMM yyyy")</MudText>
+                                </MudStack>
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudText Typo="Typo.body2" Color="Color.Default">Check-out:</MudText>
+                                    <MudText Typo="Typo.body1">@confirmedBooking.CheckOut.ToString("dd MMM yyyy")</MudText>
+                                </MudStack>
+                                <MudDivider />
+                                <MudStack Row="true" Justify="Justify.SpaceBetween">
+                                    <MudText Typo="Typo.body2" Color="Color.Default">Total:</MudText>
+                                    <MudText Typo="Typo.h6" Color="Color.Primary">$@confirmedBooking.PriceBreakdown.Total.ToString("N2")</MudText>
+                                </MudStack>
+                            </MudStack>
+                        </MudPaper>
+
+                        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-4">
+                            Se ha enviado un correo de confirmación a <strong>@confirmedBooking.GuestEmail</strong>
+                        </MudAlert>
+
+                        <MudStack Spacing="2">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       StartIcon="@Icons.Material.Filled.Description"
+                                       OnClick="DownloadConfirmation">
+                                Descargar Confirmación
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       FullWidth="true"
+                                       Href="/">
+                                Volver al Inicio
+                            </MudButton>
+                        </MudStack>
+                    </div>
+                </DialogContent>
+            </MudDialog>
+        }
+
+    </MudContainer>
+</section>
+
+<style>
+    .booking-page {
+        background: linear-gradient(180deg, #f8f9fa 0%, #ffffff 100%);
+        min-height: 100vh;
+        padding-bottom: 4rem;
+    }
+
+    .booking-header {
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .page-title {
+        font-weight: 700;
+        color: #023047;
+        margin-bottom: 0.5rem;
+        font-size: clamp(1.75rem, 4vw, 2.5rem);
+    }
+
+    .page-subtitle {
+        color: #666;
+        max-width: 600px;
+        margin: 0 auto 2rem auto;
+    }
+
+    /* Stepper personalizado */
+    .progress-stepper {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .booking-stepper {
+        background: transparent;
+    }
+
+    /* Contenido de steps */
+    .step-content {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Resumen de precio lateral */
+    .price-summary-container {
+        position: sticky;
+        top: 100px;
+    }
+
+    /* Dialog de éxito */
+    .booking-success-dialog {
+        max-width: 500px;
+    }
+
+    .success-content {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .success-icon {
+        font-size: 4rem !important;
+        margin-bottom: 1rem;
+    }
+
+    .confirmation-details {
+        background: linear-gradient(135deg, rgba(33, 158, 188, 0.05) 0%, rgba(255, 183, 3, 0.05) 100%);
+        border-radius: 12px;
+    }
+
+    .booking-stepper .mud-stepper-actions {
+        display: none;
+    }
+
+    /* Responsive */
+    @@media (max-width: 1280px) {
+        .price-summary-container {
+            position: relative;
+            top: 0;
+            margin-top: 2rem;
+        }
+    }
+
+    @@media (max-width: 960px) {
+        .booking-page {
+            padding-bottom: 2rem;
+        }
+
+        .step-content {
+            padding: 1.5rem;
+        }
+
+        .booking-header {
+            margin-bottom: 1.5rem;
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .step-content {
+            padding: 1rem;
+        }
+
+        .success-content {
+            padding: 1rem;
+        }
+
+        .success-icon {
+            font-size: 3rem !important;
+        }
+    }
+</style>
+
+@code {
+    private MudStepper? stepper;
+    private Step1DateSelection? step1Component;
+    private Step2ServicesSelection? step2Component;
+    private Step3Summary? step3Component;
+    private PriceSummaryCard? priceSummaryCard;
+
+    private bool showSuccessDialog = false;
+    private BookingSummary? confirmedBooking;
+
+    private DialogOptions successDialogOptions = new()
+    {
+        CloseButton = false,
+        BackdropClick = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar si hay datos pre-cargados del CTA flotante
+        if (BookingState.SelectedDates != null)
+        {
+            _snackbar.Add("Datos cargados desde el formulario", Severity.Success);
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(50);
+            try
+            {
+                await JS.InvokeVoidAsync("animInitAOS");
+            }
+            catch { }
+        }
+    }
+
+    private void OnStepChanged(StepChangeDirection direction)
+    {
+        // Actualizar el resumen de precio cuando cambia el step
+        StateHasChanged();
+        priceSummaryCard?.Refresh();
+    }
+
+    private void HandleStep1Validation(bool isValid)
+    {
+        // Callback cuando el paso 1 valida correctamente
+        if (isValid && stepper != null)
+        {
+            // Permitir avanzar al siguiente paso
+            StateHasChanged();
+        }
+    }
+
+    private async Task GoToNextStep()
+    {
+        if (stepper is null)
+            return;
+
+        await stepper.NextStepAsync();
+        priceSummaryCard?.Refresh();
+    }
+
+    private async Task ReturnPreviousStep()
+    {
+        if (stepper is null)
+            return;
+
+        await stepper.PreviousStepAsync();
+        priceSummaryCard?.Refresh();
+    }
+
+    private async Task HandleBookingConfirmation(BookingSummary summary)
+    {
+        // Callback cuando se confirma la reserva desde el Step 3
+        confirmedBooking = summary;
+        showSuccessDialog = true;
+
+        // Limpiar el estado después de mostrar el diálogo
+        await Task.Delay(500);
+        StateHasChanged();
+    }
+
+    private void DownloadConfirmation()
+    {
+        // TODO: Implementar generación de PDF con la confirmación
+        _snackbar.Add("Descarga de confirmación próximamente", Severity.Info);
+    }
+}

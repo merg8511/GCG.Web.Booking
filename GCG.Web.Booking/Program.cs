@@ -1,4 +1,6 @@
 using GCG.Web.Booking.Components;
+using GCG.Web.Booking.Services;
+using GCG.Web.Booking.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -14,6 +16,10 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddMudServices();
 builder.Services.AddMudExtensions();
+
+builder.Services.AddScoped<BookingStateService>();
+builder.Services.AddScoped<IAvailabilityService, AvailabilityServiceMock>();
+builder.Services.AddScoped<IBookingService, BookingServiceMock>();
 
 //Culture info
 CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;

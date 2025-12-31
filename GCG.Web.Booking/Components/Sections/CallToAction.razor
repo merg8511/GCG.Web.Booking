@@ -1,5 +1,10 @@
-﻿<div class="booking-toggle-tab d-md-none" @onclick="ToggleMobileBar">
-    <MudIcon Icon="@(isMobileVisible ? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ExpandLess)" />
+﻿@using GCG.Web.Booking.Services
+
+@inject BookingStateService BookingState
+@inject NavigationManager Nav
+
+<div class="booking-toggle-tab d-md-none" @onclick="ToggleMobileBar">
+    <MudIcon Icon="@(isMobileVisible? Icons.Material.Filled.ExpandMore : Icons.Material.Filled.ExpandLess)" />
 </div>
 
 <div class="booking-bar @(isMobileVisible ? "mobile-visible" : "")">
@@ -91,7 +96,8 @@
                Style="color:black !important;"
                Class="booking-button"
                StartIcon="@Icons.Material.Filled.CalendarMonth"
-               OnClick="ConfirmBooking">
+               OnClick="NavigateToBooking"
+               Disabled="@(!IsFormValid())">
         Reservar Ahora
     </MudButton>
 </div>
@@ -190,17 +196,18 @@
     }
 
     /* Responsive Mobile */
+    .mud-button-filled:disabled {
+        background-color: var(--mud-palette-secondary) !important;
+        opacity: 0.5;
+    }
 
 </style>
 
 @code {
-    private DateRange? selectedRange; // = new(DateTime.Today, DateTime.Today.AddDays(2));
-
-    // Corrección: debe ser MudDateRangePicker, no MudDatePicker
-    private MudDateRangePicker _picker;
-
-    private int adults;
-    private int children;
+    private DateRange? selectedRange;
+    private MudDateRangePicker _picker = default!;
+    private int adults = 0;
+    private int children = 0;
     private string promoCode = "";
     private bool isMobileVisible = false;
     private bool isPickerOpen = false;
@@ -211,13 +218,40 @@
         DateTime.Today.AddDays(5),
         DateTime.Today.AddDays(10),
         DateTime.Today.AddDays(12),
+        new DateTime(2025, 1, 5),
+        new DateTime(2025, 1, 6),
+        new DateTime(2025, 1, 7),
     };
 
     private bool IsDisabled(DateTime date) => DisabledDays.Contains(date.Date);
 
-    private void ConfirmBooking()
+    private bool IsFormValid()
     {
-        Console.WriteLine($"Reserva: {selectedRange?.Start:dd/MM/yyyy} al {selectedRange?.End:dd/MM/yyyy}, {adults} adultos, {children} niños, código: {promoCode}");
+        return selectedRange != null
+               && selectedRange.Start.HasValue
+               && selectedRange.End.HasValue
+               && adults > 0
+               && (adults + children) <= 12;
+    }
+
+    private void NavigateToBooking()
+    {
+        if (!IsFormValid())
+        {
+            _snackbar.Add("Por favor completa todos los campos requeridos", Severity.Warning);
+            return;
+        }
+
+        // Guardar datos en el BookingStateService
+        BookingState.LoadFromFloatingCTA(
+            selectedRange,
+            adults,
+            children,
+            string.IsNullOrWhiteSpace(promoCode) ? null : promoCode
+        );
+
+        // Navegar a la página de booking
+        Nav.NavigateTo("/booking");
     }
 
     private void ToggleMobileBar() => isMobileVisible = !isMobileVisible;
